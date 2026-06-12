@@ -3,124 +3,318 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kivaywa Library OS</title>
+    <title>Kivaywa Secondary School Library Dashboard</title>
+    <!-- Tailwind CSS for modern premium styling -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="app.js"></script>
     <style>
-        /* Premium custom micro-interactions */
+        /* Modern glass effect styling */
         .glass-card {
-            background: rgba(15, 23, 42, 0.65);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(13, 20, 38, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
         }
         .glow-cyan:focus {
-            box-shadow: 0 0 15px rgba(6, 182, 212, 0.15);
+            box-shadow: 0 0 18px rgba(6, 182, 212, 0.25);
         }
     </style>
 </head>
-<body class="bg-[#05070c] text-slate-100 font-sans min-h-screen antialiased selection:bg-cyan-500/30">
+<body class="bg-[#030712] text-slate-100 font-sans min-h-screen antialiased selection:bg-cyan-500/30">
 
-    <div id="toast-container" class="fixed top-6 right-6 z-50 space-y-3 pointer-events-none"></div>
-
+    <!-- Global Layout Wrapper -->
     <div class="flex min-h-screen">
         
-        <aside class="w-64 border-r border-slate-900/60 bg-[#070a12]/80 backdrop-blur-md flex flex-col justify-between hidden md:flex">
+        <!-- Left Navigation Sidebar -->
+        <aside class="w-68 border-r border-slate-900/80 bg-[#070a13]/90 backdrop-blur-md flex flex-col justify-between hidden lg:flex">
             <div class="p-6">
+                <!-- Library Branding Logo -->
                 <div class="flex items-center space-x-3 mb-8">
-                    <div class="h-8 w-8 bg-gradient-to-tr from-cyan-500 to-blue-600 rounded-lg flex items-center justify-center font-bold text-black text-sm tracking-tight shadow-lg shadow-cyan-500/20">
-                        N
+                    <div class="h-9 w-9 bg-gradient-to-tr from-cyan-400 to-blue-600 rounded-xl flex items-center justify-center font-black text-black text-base shadow-lg shadow-cyan-500/20">
+                        K
                     </div>
-                    <span class="text-md font-bold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400">NEXUS // OS</span>
+                    <div>
+                        <span class="block text-sm font-bold tracking-wider text-white">KIVAYWA HIGH</span>
+                        <span class="block text-[10px] text-cyan-400 font-medium uppercase tracking-widest">Library System</span>
+                    </div>
                 </div>
                 
+                <!-- Main Menu Options -->
                 <nav class="space-y-1.5">
-                    <button data-tab="catalog" class="tab-btn w-full flex items-center space-x-3 px-4 py-2.5 text-sm font-medium rounded-lg bg-cyan-950/40 text-cyan-400 border border-cyan-500/10 transition-all cursor-pointer">
-                        <span>📚</span> <span>Asset Catalog</span>
+                    <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-4 mb-2">Main Menu</p>
+                    <button class="w-full flex items-center justify-between px-4 py-2.5 text-sm font-medium rounded-xl bg-gradient-to-r from-cyan-950/50 to-slate-900/20 text-cyan-400 border border-cyan-500/10 transition-all cursor-pointer">
+                        <div class="flex items-center space-x-3">
+                            <span class="text-base">📚</span> <span>Book Catalog</span>
+                        </div>
+                        <span class="bg-cyan-950 text-cyan-400 text-[10px] px-2 py-0.5 rounded-md border border-cyan-500/20 font-bold">248</span>
                     </button>
-                    <button data-tab="loans" class="tab-btn w-full flex items-center space-x-3 px-4 py-2.5 text-sm font-medium rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-900/40 transition-all cursor-pointer">
-                        <span>🔄</span> <span>Active Loans</span>
+                    <button class="w-full flex items-center space-x-3 px-4 py-2.5 text-sm font-medium rounded-xl text-slate-400 hover:text-slate-200 hover:bg-slate-900/40 transition-all cursor-pointer">
+                        <span>🔄</span> <span>Active Student Loans</span>
+                    </button>
+                    <button class="w-full flex items-center space-x-3 px-4 py-2.5 text-sm font-medium rounded-xl text-slate-400 hover:text-slate-200 hover:bg-slate-900/40 transition-all cursor-pointer">
+                        <span>👥</span> <span>Student Registry</span>
+                    </button>
+
+                    <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-4 pt-6 mb-2">Reports & Settings</p>
+                    <button class="w-full flex items-center space-x-3 px-4 py-2.5 text-sm font-medium rounded-xl text-slate-400 hover:text-slate-200 hover:bg-slate-900/40 transition-all cursor-pointer">
+                        <span>⚠️</span> <span>Overdue Reminders</span>
+                    </button>
+                    <button class="w-full flex items-center space-x-3 px-4 py-2.5 text-sm font-medium rounded-xl text-slate-400 hover:text-slate-200 hover:bg-slate-900/40 transition-all cursor-pointer">
+                        <span>⚙️</span> <span>System Settings</span>
                     </button>
                 </nav>
             </div>
-            <div class="p-4 border-t border-slate-900/60 text-xs text-slate-500 flex justify-between items-center">
-                <span>v2.1.0-beta</span>
-                <span class="flex items-center gap-1"><span class="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Client-side API</span>
+
+            <!-- Sidebar Bottom Footer Info -->
+            <div class="p-4 border-t border-slate-900 bg-slate-950/20 text-[11px] text-slate-500 flex justify-between items-center">
+                <span class="font-medium">Version 3.0 (Pro)</span>
+                <span class="flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span> Cloud Sync Ready</span>
             </div>
         </aside>
 
+        <!-- Right Side Main Content View -->
         <div class="flex-1 flex flex-col min-w-0">
             
-            <header class="h-16 border-b border-slate-900/60 px-8 flex items-center justify-between bg-[#05070c]/50 backdrop-blur-sm">
-                <h1 id="page-title" class="text-base font-semibold tracking-wide text-slate-200">Asset Catalog</h1>
+            <!-- Dynamic Top Header Search Bar Area -->
+            <header class="h-20 border-b border-slate-900/80 px-8 flex items-center justify-between bg-[#030712]/70 backdrop-blur-md sticky top-0 z-40">
+                <div>
+                    <h1 class="text-lg font-bold tracking-tight text-white">Library Asset Management</h1>
+                    <p class="text-xs text-slate-400">Manage school books, monitor student borrowing, and check live stock levels.</p>
+                </div>
                 
-                <div class="relative w-72">
-                    <input type="text" id="global-search" placeholder="Quick search library... (Ctrl + K)" 
-                           class="w-full bg-slate-900/50 border border-slate-800 rounded-lg pl-9 pr-4 py-1.5 text-xs text-slate-300 placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 transition-all glow-cyan">
-                    <span class="absolute left-3 top-2.5 text-xs opacity-40">🔍</span>
+                <!-- Main Search Engine Input -->
+                <div class="relative w-80 hidden sm:block">
+                    <input type="text" placeholder="Search books by title, author, or book number..." 
+                           class="w-full bg-slate-900/60 border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 transition-all glow-cyan">
+                    <span class="absolute left-3.5 top-2.5 text-sm opacity-50">🔍</span>
                 </div>
             </header>
 
+            <!-- Main Interactive Scroll Workspace -->
             <main class="flex-1 p-8 space-y-8 overflow-y-auto max-w-7xl w-full mx-auto">
                 
-                <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div class="glass-card p-5 rounded-xl shadow-xs">
-                        <div class="text-xs font-semibold uppercase tracking-wider text-slate-500">Total Registry</div>
-                        <div id="metric-total" class="text-2xl font-bold text-slate-200 mt-1">00</div>
+                <!-- Notice Bar Feature for Live Alerts -->
+                <div class="bg-gradient-to-r from-amber-500/10 to-transparent border border-amber-500/20 rounded-xl p-4 flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <span class="text-xl">⚠️</span>
+                        <div>
+                            <h4 class="text-xs font-semibold text-amber-400">Attention Required</h4>
+                            <p class="text-[11px] text-slate-400">There are currently 2 books overdue for return. Please check the active loans tab to send reminders.</p>
+                        </div>
                     </div>
-                    <div class="glass-card p-5 rounded-xl shadow-xs">
-                        <div class="text-xs font-semibold uppercase tracking-wider text-slate-500">In Circulation</div>
-                        <div id="metric-loans" class="text-2xl font-bold text-cyan-400 mt-1">00</div>
+                    <button class="text-[11px] font-bold text-amber-400 hover:underline cursor-pointer">View Overdue List →</button>
+                </div>
+
+                <!-- Premium Stats Counter Overview Blocks -->
+                <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="glass-card p-5 rounded-2xl relative overflow-hidden">
+                        <div class="text-xs font-bold uppercase tracking-wider text-slate-500">Total Books Logged</div>
+                        <div class="text-3xl font-black text-white mt-1">248</div>
+                        <div class="text-[11px] text-emerald-400 font-medium mt-1">✨ 12 new added this month</div>
                     </div>
-                    <div class="glass-card p-5 rounded-xl shadow-xs">
-                        <div class="text-xs font-semibold uppercase tracking-wider text-slate-500">Available Capital</div>
-                        <div id="metric-available" class="text-2xl font-bold text-emerald-400 mt-1">00</div>
+                    <div class="glass-card p-5 rounded-2xl">
+                        <div class="text-xs font-bold uppercase tracking-wider text-slate-500">Currently Borrowed Out</div>
+                        <div class="text-3xl font-black text-cyan-400 mt-1">42</div>
+                        <div class="text-[11px] text-slate-400 font-medium mt-1">👤 By Form 1 to Form 4 students</div>
+                    </div>
+                    <div class="glass-card p-5 rounded-2xl">
+                        <div class="text-xs font-bold uppercase tracking-wider text-slate-500">Available on Shelves</div>
+                        <div class="text-3xl font-black text-emerald-400 mt-1">206</div>
+                        <div class="text-[11px] text-slate-400 font-medium mt-1">✅ Ready to be issued out</div>
+                    </div>
+                    <div class="glass-card p-5 rounded-2xl">
+                        <div class="text-xs font-bold uppercase tracking-wider text-slate-500">Lost or Damaged Book Items</div>
+                        <div class="text-3xl font-black text-rose-400 mt-1">04</div>
+                        <div class="text-[11px] text-rose-400/70 font-medium mt-1">❌ Requires replacement copies</div>
                     </div>
                 </section>
 
+                <!-- Core Work Area Division Grid Layout -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
                     
-                    <div class="glass-card p-6 rounded-xl space-y-6">
-                        <div>
-                            <h3 class="text-sm font-semibold text-slate-200">Asset Management</h3>
-                            <p class="text-xs text-slate-500 mt-0.5">Ingest new media and entities into database.</p>
+                    <!-- Left Column Side Forms Panels -->
+                    <div class="space-y-6">
+                        <!-- Add New Book Form Section Card -->
+                        <div class="glass-card p-6 rounded-2xl space-y-5">
+                            <div>
+                                <h3 class="text-sm font-bold text-white flex items-center gap-2"><span>➕</span> Add a New Book</h3>
+                                <p class="text-xs text-slate-400 mt-0.5">Quickly type details here to add a new copy to inventory shelves.</p>
+                            </div>
+                            
+                            <form class="space-y-4">
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-400 mb-1.5">Book Title Name</label>
+                                    <input type="text" placeholder="e.g., Longhorn Secondary Biology Form 3" 
+                                           class="w-full bg-slate-900/50 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500/50 transition-all">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-slate-400 mb-1.5">Author / Writer</label>
+                                    <input type="text" placeholder="e.g., J. K. Mburu" 
+                                           class="w-full bg-slate-900/50 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500/50 transition-all">
+                                </div>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label class="block text-[11px] font-semibold text-slate-400 mb-1.5">Book Category / Subject</label>
+                                        <select class="w-full bg-slate-900/50 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-400 focus:outline-none focus:border-cyan-500/50 transition-all">
+                                            <option>Science</option>
+                                            <option>Mathematics</option>
+                                            <option>Humanities</option>
+                                            <option>Languages</option>
+                                            <option>Story Books / Fiction</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] font-semibold text-slate-400 mb-1.5">Shelf Location Code</label>
+                                        <input type="text" placeholder="e.g., Cabinet B-4" 
+                                               class="w-full bg-slate-900/50 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500/50 transition-all">
+                                    </div>
+                                </div>
+                                <button type="button" class="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 text-xs font-bold py-3 px-4 rounded-xl shadow-lg shadow-cyan-500/10 transition-all cursor-pointer">
+                                    Save Book to Database
+                                </button>
+                            </form>
                         </div>
-                        
-                        <form id="add-book-form" class="space-y-3.5">
+
+                        <!-- Live Recent Activity Feed Log Feature Panel -->
+                        <div class="glass-card p-6 rounded-2xl space-y-4">
                             <div>
-                                <label class="block text-[10px] uppercase tracking-widest font-semibold text-slate-400 mb-1.5">Asset Classification Title</label>
-                                <input type="text" id="form-title" required placeholder="e.g., Introduction to Algorithms" 
-                                       class="w-full bg-slate-900/40 border border-slate-800 rounded-lg px-3.5 py-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-500/50 transition-all">
+                                <h3 class="text-sm font-bold text-white flex items-center gap-2"><span>⏱️</span> Live System Log Activity</h3>
+                                <p class="text-xs text-slate-400 mt-0.5">Real-time logs of student check-ins and check-outs.</p>
                             </div>
-                            <div>
-                                <label class="block text-[10px] uppercase tracking-widest font-semibold text-slate-400 mb-1.5">Origin Author/Creator</label>
-                                <input type="text" id="form-author" required placeholder="e.g., Thomas H. Cormen" 
-                                       class="w-full bg-slate-900/40 border border-slate-800 rounded-lg px-3.5 py-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-500/50 transition-all">
+                            <div class="space-y-3.5">
+                                <div class="flex items-start space-x-3 text-xs border-b border-slate-900/60 pb-3">
+                                    <span class="text-emerald-400 pt-0.5">📥</span>
+                                    <div>
+                                        <p class="text-slate-300 font-medium">David Otieno (Form 4B) returned <span class="text-cyan-400">"Kigogo"</span></p>
+                                        <span class="text-[10px] text-slate-500">Just now • Handed back to desk</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-start space-x-3 text-xs border-b border-slate-900/60 pb-3">
+                                    <span class="text-cyan-400 pt-0.5">📤</span>
+                                    <div>
+                                        <p class="text-slate-300 font-medium">Mercy Chebet (Form 2 West) borrowed <span class="text-cyan-400">"KLB Mathematics Bk 2"</span></p>
+                                        <span class="text-[10px] text-slate-500">14 mins ago • Due date set for June 26</span>
+                                    </div>
+                                </div>
                             </div>
-                            <button type="submit" class="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-black text-xs font-bold py-2.5 px-4 rounded-lg shadow-lg shadow-cyan-950/20 transition-all duration-200 transform active:scale-[0.99] cursor-pointer">
-                                Committ to Registry
-                            </button>
-                        </form>
+                        </div>
                     </div>
 
-                    <div class="lg:col-span-2 glass-card rounded-xl overflow-hidden shadow-2xl">
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left border-collapse">
-                                <thead>
-                                    <tr class="bg-slate-900/30 text-slate-400 text-[10px] uppercase tracking-widest font-semibold border-b border-slate-900">
-                                        <th class="px-6 py-4">Resource Description</th>
-                                        <th class="px-6 py-4">Availability Index</th>
-                                        <th class="px-6 py-4 text-right">Operational Executions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="dynamic-table-rows" class="divide-y divide-slate-900/60 text-xs">
-                                    </tbody>
-                            </table>
-                        </div>
+                    <!-- Right Main Dynamic Tables List Wrapper Section -->
+                    <div class="lg:col-span-2 space-y-4">
                         
-                        <div id="table-empty-state" class="hidden py-16 px-6 text-center space-y-2">
-                            <div class="text-2xl">🔍</div>
-                            <h4 class="text-sm font-medium text-slate-400">No assets found</h4>
-                            <p class="text-xs text-slate-600 max-w-xs mx-auto">Adjust your search parameters or query filters to locate records.</p>
+                        <!-- Filter Actions Toolbar Feature Row Box -->
+                        <div class="glass-card p-3 rounded-xl flex flex-wrap items-center justify-between gap-3">
+                            <div class="flex items-center space-x-1.5 overflow-x-auto">
+                                <button class="px-3 py-1.5 bg-cyan-950 text-cyan-400 border border-cyan-500/20 text-xs font-semibold rounded-lg cursor-pointer">All Categories</button>
+                                <button class="px-3 py-1.5 text-slate-400 hover:text-slate-200 text-xs font-semibold rounded-lg transition-all cursor-pointer">Sciences</button>
+                                <button class="px-3 py-1.5 text-slate-400 hover:text-slate-200 text-xs font-semibold rounded-lg transition-all cursor-pointer">Mathematics</button>
+                                <button class="px-3 py-1.5 text-slate-400 hover:text-slate-200 text-xs font-semibold rounded-lg transition-all cursor-pointer">Languages</button>
+                            </div>
+                            <div class="text-xs text-slate-400 font-medium px-2">
+                                Showing <span class="text-white font-bold">3 Book entries</span>
+                            </div>
                         </div>
+
+                        <!-- Data List Table Container Panel Box -->
+                        <div class="glass-card rounded-2xl overflow-hidden shadow-2xl">
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr class="bg-slate-900/40 text-slate-400 text-[11px] uppercase tracking-widest font-bold border-b border-slate-900">
+                                            <th class="px-6 py-4.5">Book Details & Author</th>
+                                            <th class="px-6 py-4.5">Cabinet Location</th>
+                                            <th class="px-6 py-4.5">Current Status</th>
+                                            <th class="px-6 py-4.5 text-right">Quick Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-900/60 text-xs">
+                                        
+                                        <!-- Row Item Sample 1 -->
+                                        <tr class="hover:bg-slate-900/20 transition-colors">
+                                            <td class="px-6 py-4.5">
+                                                <div class="font-bold text-slate-200 text-sm">Blossoms of the Savannah</div>
+                                                <div class="text-slate-400 font-medium mt-0.5">by H. R. Ole Kulet <span class="text-slate-600 px-1">•</span> <span class="text-[11px] text-slate-500 font-mono">ID: #BOK-0943</span></div>
+                                            </td>
+                                            <td class="px-6 py-4.5 font-medium text-slate-400">
+                                                Shelf 3A (English Literature)
+                                            </td>
+                                            <td class="px-6 py-4.5">
+                                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                                    <span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span> Available on Shelf
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4.5 text-right space-x-1.5 whitespace-nowrap">
+                                                <button class="bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500 hover:text-black border border-cyan-500/20 text-[11px] font-bold px-3 py-1.5 rounded-xl transition-all cursor-pointer">
+                                                    Issue to Student
+                                                </button>
+                                                <button class="text-slate-500 hover:text-rose-400 px-2 py-1.5 rounded-lg transition-all cursor-pointer" title="Delete Book From Records">🗑️</button>
+                                            </td>
+                                        </tr>
+
+                                        <!-- Row Item Sample 2 -->
+                                        <tr class="hover:bg-slate-900/20 transition-colors">
+                                            <td class="px-6 py-4.5">
+                                                <div class="font-bold text-slate-200 text-sm">KLB Secondary Chemistry Form 4</div>
+                                                <div class="text-slate-400 font-medium mt-0.5">by Kenya Literature Bureau <span class="text-slate-600 px-1">•</span> <span class="text-[11px] text-slate-500 font-mono">ID: #CHM-2210</span></div>
+                                            </td>
+                                            <td class="px-6 py-4.5 font-medium text-slate-400">
+                                                Cabinet C-1 (Sciences Area)
+                                            </td>
+                                            <td class="px-6 py-4.5">
+                                                <div>
+                                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20 mb-1">
+                                                        <span class="h-1.5 w-1.5 rounded-full bg-amber-400"></span> Borrowed Out
+                                                    </span>
+                                                </div>
+                                                <div class="text-[11px] text-slate-300 font-bold">John Jackson Onyango</div>
+                                                <div class="text-[10px] text-slate-500">Form 3 East • Due June 18</div>
+                                            </td>
+                                            <td class="px-6 py-4.5 text-right space-x-1.5 whitespace-nowrap">
+                                                <button class="bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500 hover:text-black border border-emerald-500/20 text-[11px] font-bold px-3 py-1.5 rounded-xl transition-all cursor-pointer">
+                                                    Process Book Return
+                                                </button>
+                                                <button class="text-slate-500 hover:text-rose-400 px-2 py-1.5 rounded-lg transition-all cursor-pointer" title="Delete Book From Records">🗑️</button>
+                                            </td>
+                                        </tr>
+
+                                        <!-- Row Item Sample 3 -->
+                                        <tr class="hover:bg-slate-900/20 transition-colors">
+                                            <td class="px-6 py-4.5">
+                                                <div class="font-bold text-slate-200 text-sm">Introduction to Computer Coding</div>
+                                                <div class="text-slate-400 font-medium mt-0.5">by Thomas H. Cormen <span class="text-slate-600 px-1">•</span> <span class="text-[11px] text-slate-500 font-mono">ID: #COMP-404</span></div>
+                                            </td>
+                                            <td class="px-6 py-4.5 font-medium text-slate-400">
+                                                Tech Lab Shelf A
+                                            </td>
+                                            <td class="px-6 py-4.5">
+                                                <div>
+                                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20 mb-1">
+                                                        <span class="h-1.5 w-1.5 rounded-full bg-rose-500"></span> Overdue for Return
+                                                    </span>
+                                                </div>
+                                                <div class="text-[11px] text-slate-300 font-bold">Alice Kamau</div>
+                                                <div class="text-[10px] text-rose-400 font-semibold">Form 4 North • Overdue by 4 days</div>
+                                            </td>
+                                            <td class="px-6 py-4.5 text-right space-x-1.5 whitespace-nowrap">
+                                                <button class="bg-amber-500/10 text-amber-400 hover:bg-amber-500 hover:text-black border border-amber-500/20 text-[11px] font-bold px-3 py-1.5 rounded-xl transition-all cursor-pointer">
+                                                    Send Alert to Student
+                                                </button>
+                                                <button class="text-slate-500 hover:text-rose-400 px-2 py-1.5 rounded-lg transition-all cursor-pointer" title="Delete Book From Records">🗑️</button>
+                                            </td>
+                                        </tr>
+
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <!-- Hidden System Empty State Alert Graphic -->
+                            <div id="table-empty-state" class="hidden py-16 px-6 text-center space-y-2">
+                                <div class="text-3xl">🔍</div>
+                                <h4 class="text-sm font-bold text-slate-300">No books found matching search</h4>
+                                <p class="text-xs text-slate-500 max-w-xs mx-auto">Double check your spelling keywords or clear active menu filters to find records.</p>
+                            </div>
+                        </div>
+
                     </div>
 
                 </div>
@@ -128,6 +322,5 @@
         </div>
     </div>
 
-    <script src="app.js"></script>
 </body>
 </html>
