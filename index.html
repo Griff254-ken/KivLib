@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kivaywa Library OS</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        /* Premium custom micro-interactions */
+        .glass-card {
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .glow-cyan:focus {
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.15);
+        }
+    </style>
+</head>
+<body class="bg-[#05070c] text-slate-100 font-sans min-h-screen antialiased selection:bg-cyan-500/30">
+
+    <div id="toast-container" class="fixed top-6 right-6 z-50 space-y-3 pointer-events-none"></div>
+
+    <div class="flex min-h-screen">
+        
+        <aside class="w-64 border-r border-slate-900/60 bg-[#070a12]/80 backdrop-blur-md flex flex-col justify-between hidden md:flex">
+            <div class="p-6">
+                <div class="flex items-center space-x-3 mb-8">
+                    <div class="h-8 w-8 bg-gradient-to-tr from-cyan-500 to-blue-600 rounded-lg flex items-center justify-center font-bold text-black text-sm tracking-tight shadow-lg shadow-cyan-500/20">
+                        N
+                    </div>
+                    <span class="text-md font-bold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400">NEXUS // OS</span>
+                </div>
+                
+                <nav class="space-y-1.5">
+                    <button data-tab="catalog" class="tab-btn w-full flex items-center space-x-3 px-4 py-2.5 text-sm font-medium rounded-lg bg-cyan-950/40 text-cyan-400 border border-cyan-500/10 transition-all cursor-pointer">
+                        <span>📚</span> <span>Asset Catalog</span>
+                    </button>
+                    <button data-tab="loans" class="tab-btn w-full flex items-center space-x-3 px-4 py-2.5 text-sm font-medium rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-900/40 transition-all cursor-pointer">
+                        <span>🔄</span> <span>Active Loans</span>
+                    </button>
+                </nav>
+            </div>
+            <div class="p-4 border-t border-slate-900/60 text-xs text-slate-500 flex justify-between items-center">
+                <span>v2.1.0-beta</span>
+                <span class="flex items-center gap-1"><span class="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Client-side API</span>
+            </div>
+        </aside>
+
+        <div class="flex-1 flex flex-col min-w-0">
+            
+            <header class="h-16 border-b border-slate-900/60 px-8 flex items-center justify-between bg-[#05070c]/50 backdrop-blur-sm">
+                <h1 id="page-title" class="text-base font-semibold tracking-wide text-slate-200">Asset Catalog</h1>
+                
+                <div class="relative w-72">
+                    <input type="text" id="global-search" placeholder="Quick search library... (Ctrl + K)" 
+                           class="w-full bg-slate-900/50 border border-slate-800 rounded-lg pl-9 pr-4 py-1.5 text-xs text-slate-300 placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 transition-all glow-cyan">
+                    <span class="absolute left-3 top-2.5 text-xs opacity-40">🔍</span>
+                </div>
+            </header>
+
+            <main class="flex-1 p-8 space-y-8 overflow-y-auto max-w-7xl w-full mx-auto">
+                
+                <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="glass-card p-5 rounded-xl shadow-xs">
+                        <div class="text-xs font-semibold uppercase tracking-wider text-slate-500">Total Registry</div>
+                        <div id="metric-total" class="text-2xl font-bold text-slate-200 mt-1">00</div>
+                    </div>
+                    <div class="glass-card p-5 rounded-xl shadow-xs">
+                        <div class="text-xs font-semibold uppercase tracking-wider text-slate-500">In Circulation</div>
+                        <div id="metric-loans" class="text-2xl font-bold text-cyan-400 mt-1">00</div>
+                    </div>
+                    <div class="glass-card p-5 rounded-xl shadow-xs">
+                        <div class="text-xs font-semibold uppercase tracking-wider text-slate-500">Available Capital</div>
+                        <div id="metric-available" class="text-2xl font-bold text-emerald-400 mt-1">00</div>
+                    </div>
+                </section>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+                    
+                    <div class="glass-card p-6 rounded-xl space-y-6">
+                        <div>
+                            <h3 class="text-sm font-semibold text-slate-200">Asset Management</h3>
+                            <p class="text-xs text-slate-500 mt-0.5">Ingest new media and entities into database.</p>
+                        </div>
+                        
+                        <form id="add-book-form" class="space-y-3.5">
+                            <div>
+                                <label class="block text-[10px] uppercase tracking-widest font-semibold text-slate-400 mb-1.5">Asset Classification Title</label>
+                                <input type="text" id="form-title" required placeholder="e.g., Introduction to Algorithms" 
+                                       class="w-full bg-slate-900/40 border border-slate-800 rounded-lg px-3.5 py-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-500/50 transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] uppercase tracking-widest font-semibold text-slate-400 mb-1.5">Origin Author/Creator</label>
+                                <input type="text" id="form-author" required placeholder="e.g., Thomas H. Cormen" 
+                                       class="w-full bg-slate-900/40 border border-slate-800 rounded-lg px-3.5 py-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-500/50 transition-all">
+                            </div>
+                            <button type="submit" class="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-black text-xs font-bold py-2.5 px-4 rounded-lg shadow-lg shadow-cyan-950/20 transition-all duration-200 transform active:scale-[0.99] cursor-pointer">
+                                Committ to Registry
+                            </button>
+                        </form>
+                    </div>
+
+                    <div class="lg:col-span-2 glass-card rounded-xl overflow-hidden shadow-2xl">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-slate-900/30 text-slate-400 text-[10px] uppercase tracking-widest font-semibold border-b border-slate-900">
+                                        <th class="px-6 py-4">Resource Description</th>
+                                        <th class="px-6 py-4">Availability Index</th>
+                                        <th class="px-6 py-4 text-right">Operational Executions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dynamic-table-rows" class="divide-y divide-slate-900/60 text-xs">
+                                    </tbody>
+                            </table>
+                        </div>
+                        
+                        <div id="table-empty-state" class="hidden py-16 px-6 text-center space-y-2">
+                            <div class="text-2xl">🔍</div>
+                            <h4 class="text-sm font-medium text-slate-400">No assets found</h4>
+                            <p class="text-xs text-slate-600 max-w-xs mx-auto">Adjust your search parameters or query filters to locate records.</p>
+                        </div>
+                    </div>
+
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
