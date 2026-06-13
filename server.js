@@ -21,7 +21,7 @@ app.use(express.json());
 // ==========================================================================
 // 2. MongoDB Atlas Connection Infrastructure
 // ==========================================================================
-const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://admin:kivaywaSecure2026@cluster0.abcde.mongodb.net/kivaywa_lms?retryWrites=true&w=majority";
+const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://MedAI:Griff2009.@medai.qjvleue.mongodb.net/?appName=MedAI";
 
 mongoose.connect(MONGO_URI)
     .then(() => console.log('🚀 Successfully established pipeline link with MongoDB Atlas Cluster.'))
