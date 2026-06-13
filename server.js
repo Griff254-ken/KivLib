@@ -1,7 +1,7 @@
 /**
  * Kivaywa High School LMS - Backend Integration Engine & REST API
  * Technology Stack: Node.js / Express.js / MongoDB Atlas (Mongoose ODM)
- * Implementation Architecture: 100% Database-Driven Framework
+ * Architecture: 100% Database-Driven Framework (Production Grade)
  */
 
 const express = require('express');
@@ -21,7 +21,7 @@ app.use(express.json());
 // ==========================================================================
 // 2. MongoDB Atlas Connection Infrastructure
 // ==========================================================================
-const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://<username>:<password>@cluster.mongodb.net/kivaywa_lms?retryWrites=true&w=majority";
+const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://admin:kivaywaSecure2026@cluster0.abcde.mongodb.net/kivaywa_lms?retryWrites=true&w=majority";
 
 mongoose.connect(MONGO_URI)
     .then(() => console.log('🚀 Successfully established pipeline link with MongoDB Atlas Cluster.'))
@@ -47,7 +47,7 @@ const Book = mongoose.model('Book', BookSchema);
 
 // --- Student Borrowing Transaction Log Document Structure ---
 const BorrowedSchema = new mongoose.Schema({
-    admNo: { type: String, required: true, unique: true, trim: true }, // Ensured unique to track active returns seamlessly
+    admNo: { type: String, required: true, unique: true, trim: true }, 
     name: { type: String, required: true, trim: true },
     form: { type: String, required: true },
     bookTitle: { type: String, required: true, trim: true },
@@ -162,19 +162,19 @@ app.post('/api/borrowed', async (req, res) => {
         // Check if student already holds a book out in active rotation
         const activeCheck = await Borrowed.findOne({ admNo });
         if (activeCheck) {
-            return res.status(400).json({ error: "Outstanding transaction detected. This Admission Number holds an unchecked-out issue asset." });
+            return res.status(400).json({ error: `Outstanding transaction detected. Admission Number ${admNo} currently holds an unreturned library asset.` });
         }
 
-        // Locate requested book inside registry layout to parse stock allocation status
-        const bookMatch = await Book.findOne({ title: { $regex: new RegExp(`^${bookTitle}$`, 'i') } });
+        // Case-insensitive lookups protect against typing discrepancies on the frontend
+        const bookMatch = await Book.findOne({ title: { $regex: new RegExp(`^${bookTitle.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')}$`, 'i') } });
         if (!bookMatch) {
-            return res.status(404).json({ error: "The inventory profile specified does not align with active library assets." });
+            return res.status(404).json({ error: `The book titled "${bookTitle}" does not match any current stock profiles inside the catalog.` });
         }
         if (bookMatch.qty < 1) {
-            return res.status(400).json({ error: "Deduction validation denied. Total allocatable volume index for this item is at zero (0)." });
+            return res.status(400).json({ error: `Insufficient stock allocation. "${bookMatch.title}" copies are fully checked out.` });
         }
 
-        // Deduct exactly one catalog item instance from physical tracking assets
+        // Deduct exactly one catalog item instance from physical tracking assets safely
         bookMatch.qty -= 1;
         await bookMatch.save();
 
@@ -199,7 +199,7 @@ app.delete('/api/borrowed/:admNo', async (req, res) => {
             return res.status(404).json({ error: "No active transactional ledger matched this identification mapping code." });
         }
 
-        // Return exact asset token reference back to matching book configuration profile
+        // Return exact asset token reference back to matching book configuration profile safely
         await Book.findOneAndUpdate(
             { title: activeIssue.bookTitle },
             { $inc: { qty: 1 } }
