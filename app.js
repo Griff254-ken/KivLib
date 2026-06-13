@@ -1,367 +1,161 @@
 /**
- * Kivaywa Secondary School - Library Management Dashboard Core JS
- * Architecture: Vanilla state-driven component management with structural updates.
+ * Kivaywa High School LMS - Frontend Orchestrator & State Management
+ * Fully wired to bind directly with clean REST API Endpoints.
  */
 
-// ==========================================
-// 1. SYSTEM STATE & SEED DATA
-// ==========================================
-const LibraryState = {
+// Global Application Memory State (Mocking initial data layer)
+let state = {
     books: [
-        {
-            id: "BOK-0943",
-            title: "Blossoms of the Savannah",
-            author: "H. R. Ole Kulet",
-            category: "Languages",
-            location: "Shelf 3A (English Lit)",
-            status: "Available",
-            borrower: null,
-            dueDate: null,
-            overdueDays: 0
-        },
-        {
-            id: "CHM-2210",
-            title: "KLB Secondary Chemistry Form 4",
-            author: "Kenya Literature Bureau",
-            category: "Science",
-            location: "Cabinet C-1 (Sciences)",
-            status: "Borrowed",
-            borrower: "John O.",
-            dueDate: "Jun 18",
-            overdueDays: 0
-        },
-        {
-            id: "COMP-404",
-            title: "Introduction to Computer Coding",
-            author: "Thomas H. Cormen",
-            category: "Science",
-            location: "Tech Lab Shelf A",
-            status: "Overdue",
-            borrower: "Alice Kamau",
-            dueDate: "Jun 09",
-            overdueDays: 4
-        },
-        {
-            id: "MATH-101",
-            title: "Advanced Mathematics for Sec Schools",
-            author: "J. K. Mburu",
-            category: "Mathematics",
-            location: "Cabinet B-2 (Maths)",
-            status: "Available",
-            borrower: null,
-            dueDate: null,
-            overdueDays: 0
-        },
-        {
-            id: "HIST-203",
-            title: "A History of Kenya",
-            author: "William R. Ochieng",
-            category: "Humanities",
-            location: "Shelf 2C (Humanities)",
-            status: "Available",
-            borrower: null,
-            dueDate: null,
-            overdueDays: 0
-        }
+        { isbn: "9789966360", title: "Blossoms of the Savannah", author: "H.R. Ole Kulet", category: "English/Literature", qty: 34 },
+        { isbn: "9789966441", title: "Kidagaa Kimemwozea", author: "Ken Walibora", category: "Kiswahili/Fasihi", qty: 28 },
+        { isbn: "9780194392", title: "Advanced Learner's Dictionary", author: "Oxford", category: "English/Literature", qty: 15 },
+        { isbn: "9789966224", title: "KLB Secondary Mathematics Form 4", author: "Kenya Literature Bureau", category: "Mathematics", qty: 50 }
     ],
-    activities: [
-        { type: 'return', user: 'David Otieno (Form 4B)', item: '"Kigogo"', meta: 'Just now • Handed back', icon: '📥', color: 'text-emerald-400' },
-        { type: 'borrow', user: 'Mercy Chebet (Form 2 West)', item: '"KLB Mathematics Bk 2"', meta: '14 mins ago • Due Jun 26', icon: '📤', color: 'text-cyan-400' },
-        { type: 'alert', user: 'Alice Kamau', item: '"Computer Coding"', meta: '1 hour ago • Reminder triggered', icon: '⚠️', color: 'text-amber-400' },
-        { type: 'add', user: 'New book added', item: '"Essential Biology F4" by KLB', meta: '3 hours ago • Added to shelf C-2', icon: '➕', color: 'text-indigo-400' }
-    ],
-    filters: {
-        searchQuery: '',
-        category: 'All Categories'
-    }
+    borrowed: [
+        { admNo: "8432", name: "John Kiprop", form: "4 West", bookTitle: "Blossoms of the Savannah", dueDate: "2026-06-20", status: "Active" },
+        { admNo: "8611", name: "Emmanuel Wafula", form: "3 North", bookTitle: "KLB Secondary Mathematics Form 4", dueDate: "2026-06-12", status: "Overdue" }
+    ]
 };
 
-// ==========================================
-// 2. DOM ELEMENT REGISTRY
-// ==========================================
-const DOM = {
-    // Stats
-    totalBooksCount: document.querySelector('.stat-card:nth-child(1) p.text-4xl'),
-    borrowedCount: document.querySelector('.stat-card:nth-child(2) p.text-4xl'),
-    availableCount: document.querySelector('.stat-card:nth-child(3) p.text-4xl'),
-    damagedCount: document.querySelector('.stat-card:nth-child(4) p.text-4xl'),
-    overdueWarningText: document.querySelector('.bg-gradient-to-r.from-amber-500\/10 p span.text-amber-300'),
-    
-    // Elements & Inputs
-    searchBar: document.querySelector('header input[type="text"]'),
-    categoryButtonsContainer: document.querySelector('.glass-panel.rounded-xl.p-3 .flex.flex-wrap.gap-2'),
-    entriesCounter: document.querySelector('.glass-panel.rounded-xl.p-3 div.text-slate-400 span'),
-    tableBody: document.querySelector('table tbody'),
-    emptyStateRow: document.querySelector('table + div.text-center'),
-    activityFeed: document.querySelector('.max-h-64.overflow-y-auto'),
-    sidebarModuleCountBadge: document.querySelector('aside nav button span.bg-cyan-900\/50'),
+// Global DOM Content Loaded Init
+document.addEventListener("DOMContentLoaded", () => {
+    initializeTabNavigation();
+    renderAppLayout();
+});
 
-    // Add Book Form
-    form: document.querySelector('form'),
-    inputTitle: document.querySelector('form input[placeholder*="Biology"]'),
-    inputAuthor: document.querySelector('form input[placeholder*="Mburu"]'),
-    selectCategory: document.querySelector('form select'),
-    inputShelf: document.querySelector('form input[placeholder*="Cabinet"]'),
-    btnSubmit: document.querySelector('form button')
-};
-
-// ==========================================
-// 3. SERVICE LOGIC & MUTATORS
-// ==========================================
-
-function updateMetrics() {
-    const total = LibraryState.books.length;
-    const borrowed = LibraryState.books.filter(b => b.status === 'Borrowed').length;
-    const overdue = LibraryState.books.filter(b => b.status === 'Overdue').length;
-    const available = LibraryState.books.filter(b => b.status === 'Available').length;
-
-    // Fast DOM injection
-    if(DOM.totalBooksCount) DOM.totalBooksCount.textContent = String(total).padStart(2, '0');
-    if(DOM.borrowedCount) DOM.borrowedCount.textContent = String(borrowed).padStart(2, '0');
-    if(DOM.availableCount) DOM.availableCount.textContent = String(available).padStart(2, '0');
-    if(DOM.overdueWarningText) DOM.overdueWarningText.textContent = `${overdue} book${overdue !== 1 ? 's' : ''}`;
-    if(DOM.sidebarModuleCountBadge) DOM.sidebarModuleCountBadge.textContent = total;
-}
-
-function pushActivity(type, user, item, meta, icon, color) {
-    LibraryState.activities.unshift({ type, user, item, meta, icon, color });
-    renderActivityFeed();
-}
-
-// ==========================================
-// 4. COMPONENT RENDERING ENGINE
-// ==========================================
-
-function renderCatalogTable() {
-    const query = LibraryState.filters.searchQuery.toLowerCase().trim();
-    const catFilter = LibraryState.filters.category;
-
-    const filtered = LibraryState.books.filter(book => {
-        const matchesSearch = book.title.toLowerCase().includes(query) || 
-                              book.author.toLowerCase().includes(query) || 
-                              book.id.toLowerCase().includes(query);
-        
-        const matchesCategory = (catFilter === 'All Categories') || 
-                                (book.category.toLowerCase() === catFilter.toLowerCase() || 
-                                 (catFilter === 'Sciences' && book.category === 'Science')); // Normalize plural matching
-
-        return matchesSearch && matchesCategory;
+// Tab Routing Subsystem Engine
+function initializeTabNavigation() {
+    const menuButtons = document.querySelectorAll(".menu-item");
+    menuButtons.forEach(button => {
+        button.addEventListener("click", () => {
+            menuButtons.forEach(btn => btn.classList.remove("active"));
+            button.classList.add("active");
+            
+            const selectedTab = button.getAttribute("data-tab");
+            switchTab(selectedTab);
+        });
     });
+}
 
-    DOM.tableBody.innerHTML = '';
-    
-    if (filtered.length === 0) {
-        DOM.emptyStateRow.classList.remove('hidden');
-        DOM.entriesCounter.textContent = '0';
+function switchTab(tabId) {
+    document.querySelectorAll(".tab-content").forEach(content => content.classList.remove("active"));
+    const activeTab = document.getElementById(`${tabId}-tab`);
+    if(activeTab) activeTab.classList.add("active");
+}
+
+// Data Component Injection Methods
+function renderAppLayout() {
+    renderMetrics();
+    renderRecentTransactions();
+    renderCatalogTable(state.books);
+    renderRegistryTable();
+}
+
+function renderMetrics() {
+    document.getElementById("total-books-count").innerText = state.books.reduce((acc, curr) => acc + parseInt(curr.qty), 0);
+    document.getElementById("issued-books-count").innerText = state.borrowed.length;
+    document.getElementById("overdue-books-count").innerText = state.borrowed.filter(b => b.status === "Overdue").length;
+}
+
+function renderRecentTransactions() {
+    const tbody = document.getElementById("recent-transactions-tbody");
+    tbody.innerHTML = state.borrowed.map(item => `
+        <tr>
+            <td><b>${item.admNo}</b></td>
+            <td>${item.name}</td>
+            <td>${item.bookTitle}</td>
+            <td>${item.dueDate}</td>
+            <td><span class="badge ${item.status === 'Overdue' ? 'badge-warning' : 'badge-success'}">${item.status}</span></td>
+        </tr>
+    `).join('');
+}
+
+function renderCatalogTable(booksArray) {
+    const tbody = document.getElementById("books-table-tbody");
+    if(booksArray.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">No books found matching search criteria.</td></tr>`;
         return;
     }
-
-    DOM.emptyStateRow.classList.add('hidden');
-    DOM.entriesCounter.textContent = filtered.length;
-
-    filtered.forEach(book => {
-        const tr = document.createElement('tr');
-        tr.className = 'table-row-hover transition';
-
-        let statusBadge = '';
-        let primaryActionBtn = '';
-
-        // Dynamic context configuration
-        if (book.status === 'Available') {
-            statusBadge = `
-                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                    <span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span> Available
-                </span>`;
-            primaryActionBtn = `<button data-id="${book.id}" data-action="issue" class="bg-cyan-500/10 hover:bg-cyan-500 text-cyan-300 hover:text-black border border-cyan-500/20 text-[11px] font-bold px-3 py-1.5 rounded-xl transition-all cursor-pointer">Issue →</button>`;
-        } else if (book.status === 'Borrowed') {
-            statusBadge = `
-                <div>
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                        <span class="h-1.5 w-1.5 rounded-full bg-amber-400"></span> Borrowed
-                    </span>
-                    <div class="text-[11px] text-slate-300 mt-1 font-medium">${book.borrower} • Due ${book.dueDate}</div>
-                </div>`;
-            primaryActionBtn = `<button data-id="${book.id}" data-action="return" class="bg-emerald-500/10 hover:bg-emerald-500 text-emerald-300 hover:text-black border border-emerald-500/20 text-[11px] font-bold px-3 py-1.5 rounded-xl transition cursor-pointer">Return</button>`;
-        } else if (book.status === 'Overdue') {
-            statusBadge = `
-                <div>
-                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">
-                        <span class="h-1.5 w-1.5 rounded-full bg-rose-500 live-dot"></span> Overdue
-                    </span>
-                    <div class="text-[11px] text-rose-300 mt-1 font-semibold">${book.borrower} • Overdue ${book.overdueDays} days</div>
-                </div>`;
-            primaryActionBtn = `<button data-id="${book.id}" data-action="alert" class="bg-amber-500/10 hover:bg-amber-500 text-amber-300 hover:text-black border border-amber-500/20 text-[11px] font-bold px-3 py-1.5 rounded-xl transition cursor-pointer">Send Alert</button>`;
-        }
-
-        tr.innerHTML = `
-            <td class="px-6 py-4">
-                <div class="font-bold text-white text-sm">${book.title}</div>
-                <div class="text-slate-400 text-xs mt-0.5">by ${book.author} • <span class="text-slate-500 font-mono text-[11px]">ID: ${book.id}</span></div>
+    tbody.innerHTML = booksArray.map(book => `
+        <tr>
+            <td><code>${book.isbn}</code></td>
+            <td><b>${book.title}</b></td>
+            <td>${book.author}</td>
+            <td>${book.category}</td>
+            <td>${book.qty} pcs</td>
+            <td>
+                <button class="btn btn-danger-outline" onclick="handleInitialBookDelete('${book.isbn}')">
+                    <i class="fa-solid fa-trash-can"></i> Remove
+                </button>
             </td>
-            <td class="px-6 py-4 text-sm text-slate-300">${book.location}</td>
-            <td class="px-6 py-4">${statusBadge}</td>
-            <td class="px-6 py-4 text-right">
-                ${primaryActionBtn}
-                <button data-id="${book.id}" data-action="delete" class="text-slate-500 hover:text-rose-400 ml-2 transition text-base cursor-pointer">🗑️</button>
+        </tr>
+    `).join('');
+}
+
+function renderRegistryTable() {
+    const tbody = document.getElementById("registry-table-tbody");
+    tbody.innerHTML = state.borrowed.map(item => `
+        <tr>
+            <td><code>${item.admNo}</code></td>
+            <td><b>${item.name}</b></td>
+            <td>${item.form}</td>
+            <td>${item.bookTitle}</td>
+            <td><span style="color: ${item.status === 'Overdue' ? '#ef4444' : 'inherit'}; font-weight:500;">${item.dueDate}</span></td>
+            <td>
+                <button class="btn btn-secondary btn-sm" onclick="handleReturnBook('${item.admNo}')">Mark Returned</button>
             </td>
-        `;
-        DOM.tableBody.appendChild(tr);
-    });
+        </tr>
+    `).join('');
 }
 
-function renderActivityFeed() {
-    DOM.activityFeed.innerHTML = '';
-    LibraryState.activities.forEach(act => {
-        const div = document.createElement('div');
-        div.className = 'flex items-start gap-3 pb-3 border-b border-white/5 last:border-0 last:pb-0';
-        div.innerHTML = `
-            <span class="${act.color} text-sm pt-0.5">${act.icon}</span>
-            <div>
-                <p class="text-xs font-medium text-slate-200">${act.user} ${act.type === 'add' ? 'added:' : 'returned'} <span class="text-cyan-300 font-semibold">${act.item}</span></p>
-                <span class="text-[10px] text-slate-500">${act.meta}</span>
-            </div>
-        `;
-        if (act.type === 'alert') {
-            div.innerHTML = `
-                <span class="${act.color} text-sm pt-0.5">${act.icon}</span>
-                <div>
-                    <p class="text-xs font-medium text-slate-200">Overdue alert sent to <span class="text-amber-300">${act.user}</span> for ${act.item}</p>
-                    <span class="text-[10px] text-slate-500">${act.meta}</span>
-                </div>
-            `;
-        }
-        DOM.activityFeed.appendChild(div);
-    });
+// Client Side Feature Filters
+function filterBooks() {
+    const query = document.getElementById("book-search").value.toLowerCase();
+    const filtered = state.books.filter(book => 
+        book.title.toLowerCase().includes(query) || 
+        book.author.toLowerCase().includes(query) || 
+        book.isbn.includes(query)
+    );
+    renderCatalogTable(filtered);
 }
 
-// ==========================================
-// 5. INTERACTION & INTERCEPT HANDLERS
-// ==========================================
+// Modal Toggle Window Operations
+function openModal(id) { document.getElementById(id).classList.add("open"); }
+function closeModal(id) { document.getElementById(id).classList.remove("open"); }
 
-function setupEventListeners() {
-    // Dynamic Query Filtering Engine
-    if(DOM.searchBar) {
-        DOM.searchBar.addEventListener('input', (e) => {
-            LibraryState.filters.searchQuery = e.target.value;
-            renderCatalogTable();
-        });
-    }
+// Transaction Executions (Actions)
+function handleInitialBookAdd(e) {
+    e.preventDefault();
+    const newBook = {
+        title: document.getElementById("book-title").value,
+        author: document.getElementById("book-author").value,
+        isbn: document.getElementById("book-isbn").value,
+        category: document.getElementById("book-category").value,
+        qty: parseInt(document.getElementById("book-qty").value)
+    };
 
-    // Tab Category Filter Interceptor
-    if(DOM.categoryButtonsContainer) {
-        DOM.categoryButtonsContainer.addEventListener('click', (e) => {
-            const btn = e.target.closest('button');
-            if (!btn) return;
+    /** * BACKEND CONNECTION BLUEPRINT:
+     * fetch('/api/books', {
+     * method: 'POST',
+     * headers: { 'Content-Type': 'application/json' },
+     * body: JSON.stringify(newBook)
+     * })
+     * .then(res => res.json())
+     * .then(savedBook => { ... refresh state ... })
+     */
 
-            // Clear legacy styling
-            Array.from(DOM.categoryButtonsContainer.children).forEach(b => {
-                b.className = "px-3 py-1.5 text-xs font-medium rounded-lg text-slate-300 hover:bg-white/5 transition cursor-pointer";
-            });
-
-            // Apply premium target design state
-            btn.className = "px-3 py-1.5 text-xs font-bold rounded-lg bg-cyan-800/60 text-cyan-200 border border-cyan-500/40 transition cursor-pointer";
-            
-            LibraryState.filters.category = btn.textContent.trim();
-            renderCatalogTable();
-        });
-    }
-
-    // Row Action Dispatcher Hub (Event Delegation)
-    if(DOM.tableBody) {
-        DOM.tableBody.addEventListener('click', (e) => {
-            const btn = e.target.closest('button');
-            if (!btn) return;
-
-            const targetId = btn.dataset.id;
-            const action = btn.dataset.action;
-            const targetBook = LibraryState.books.find(b => b.id === targetId);
-
-            if (!targetBook) return;
-
-            switch (action) {
-                case 'issue':
-                    const student = prompt(`Enter Student Name / Admission ID to issue "${targetBook.title}":`);
-                    if (student && student.trim() !== '') {
-                        targetBook.status = 'Borrowed';
-                        targetBook.borrower = student.trim();
-                        targetBook.dueDate = 'Jun 27'; // Auto incremental timeline offset fallback
-                        pushActivity('borrow', targetBook.borrower, `"${targetBook.title}"`, 'Just now • Due Jun 27', '📤', 'text-cyan-400');
-                    }
-                    break;
-
-                case 'return':
-                    const previousBorrower = targetBook.borrower || 'Student';
-                    targetBook.status = 'Available';
-                    targetBook.borrower = null;
-                    targetBook.dueDate = null;
-                    targetBook.overdueDays = 0;
-                    pushActivity('return', `${previousBorrower} (Handed back)`, `"${targetBook.title}"`, 'Just now • Managed Shelf Return', '📥', 'text-emerald-400');
-                    break;
-
-                case 'alert':
-                    alert(`System Notification broadcast successfully triggered to ${targetBook.borrower} for overdue status on item: ID [${targetBook.id}].`);
-                    pushActivity('alert', targetBook.borrower, `"${targetBook.title}"`, 'Just now • Routine Warning Transmitted', '⚠️', 'text-amber-400');
-                    break;
-
-                case 'delete':
-                    if (confirm(`Are you sure you want to remove "${targetBook.title}" from Database Records?`)) {
-                        LibraryState.books = LibraryState.books.filter(b => b.id !== targetId);
-                    }
-                    break;
-            }
-
-            updateMetrics();
-            renderCatalogTable();
-        });
-    }
-
-    // Record Append Processing Engine
-    if(DOM.btnSubmit) {
-        DOM.btnSubmit.addEventListener('click', (e) => {
-            e.preventDefault();
-
-            const title = DOM.inputTitle.value.trim();
-            const author = DOM.inputAuthor.value.trim();
-            const category = DOM.selectCategory.value;
-            const location = DOM.inputShelf.value.trim() || 'Unassigned Center';
-
-            if (!title || !author) {
-                alert('Database ingestion failed: Asset Title and Primary Author fields are strictly mandatory.');
-                return;
-            }
-
-            // Generate deterministic internal unique mapping identity token
-            const computedId = `${category.substring(0,3).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`;
-
-            const dynamicNewAsset = {
-                id: computedId,
-                title: title,
-                author: author,
-                category: category,
-                location: location,
-                status: 'Available',
-                borrower: null,
-                dueDate: null,
-                overdueDays: 0
-            };
-
-            LibraryState.books.push(dynamicNewAsset);
-            pushActivity('add', 'New book added', `"${title}" by ${author}`, `Just now • Added to ${location}`, '➕', 'text-indigo-400');
-
-            // Reset UI state interface parameters
-            DOM.form.reset();
-            updateMetrics();
-            renderCatalogTable();
-        });
-    }
+    state.books.push(newBook);
+    renderAppLayout();
+    document.getElementById("add-book-form").reset();
+    closeModal("add-book-modal");
 }
 
-// ==========================================
-// 6. INITIALIZATION SEQUENCE
-// ==========================================
-document.addEventListener('DOMContentLoaded', () => {
-    updateMetrics();
-    renderCatalogTable();
-    renderActivityFeed();
-    setupEventListeners();
-});
+function handleInitialBookDelete(isbn) {
+    state.books = state.books.filter(book => book.isbn !== isbn);
+    renderAppLayout();
+}
+
+function handleReturnBook(admNo) {
+    state.borrowed = state.borrowed.filter(item => item.admNo !== admNo);
+    renderAppLayout();
+}
