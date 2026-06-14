@@ -45,16 +45,22 @@ const BookSchema = new mongoose.Schema({
 
 const Book = mongoose.model('Book', BookSchema);
 
-// --- Student Borrowing Transaction Log Document Structure ---
+// --- Borrower Transaction Log Document Structure ---
 const BorrowedSchema = new mongoose.Schema({
-    admNo: { type: String, required: true, unique: true, trim: true }, 
+    borrowerType: { type: String, enum: ['Student', 'Teacher/Staff'], default: 'Student', required: true },
+    admNo: { type: String, required: true, trim: true }, 
     name: { type: String, required: true, trim: true },
-    form: { type: String, required: true },
+    form: { type: String, required: true }, // Repurposed for Class/Stream or Department
     bookTitle: { type: String, required: true, trim: true },
     issueDate: { type: String, required: true },
     dueDate: { type: String, required: true },
-    status: { type: String, enum: ['Active', 'Overdue'], default: 'Active' }
+    status: { type: String, enum: ['Active', 'Overdue'], default: 'Active' },
+    conditionDeficit: { type: String, default: 'Good' },
+    fineAmount: { type: Number, default: 0 }
 }, { timestamps: true });
+
+// Indexing mapping to optimize lookup routines safely without strict unique limits
+BorrowedSchema.index({ admNo: 1, bookTitle: 1 });
 
 const Borrowed = mongoose.model('Borrowed', BorrowedSchema);
 
@@ -78,6 +84,12 @@ async function computeRealtimeOverdueStatus() {
 
             if (today > dueDate) {
                 log.status = 'Overdue';
+                
+                // Automatically assess baseline KES 20 standard fine per day if field isn't manually locked
+                const diffTime = Math.abs(today - dueDate);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                log.fineAmount = diffDays * 20;
+                
                 await log.save();
             }
         }
@@ -109,7 +121,6 @@ app.post('/api/books', async (req, res) => {
     try {
         const { title, author, isbn, category, qty } = req.body;
         
-        // Block redundant configurations matching exact database entries
         const targetExists = await Book.findOne({ isbn });
         if (targetExists) {
             return res.status(400).json({ error: "A book configuration profile running this unique ISBN context already exists." });
@@ -143,7 +154,6 @@ app.delete('/api/books/:isbn', async (req, res) => {
 // --------------------------------------------------------------------------
 app.get('/api/borrowed', async (req, res) => {
     try {
-        // Run temporal date-checking algorithm before delivery
         await computeRealtimeOverdueStatus();
         const borrowings = await Borrowed.find().sort({ createdAt: -1 });
         res.status(200).json(borrowings);
@@ -157,12 +167,12 @@ app.get('/api/borrowed', async (req, res) => {
 // --------------------------------------------------------------------------
 app.post('/api/borrowed', async (req, res) => {
     try {
-        const { admNo, name, form, bookTitle, issueDate, dueDate } = req.body;
+        const { borrowerType, admNo, name, form, bookTitle, issueDate, dueDate } = req.body;
 
-        // Check if student already holds a book out in active rotation
-        const activeCheck = await Borrowed.findOne({ admNo });
+        // Validation rule lookup check matching specific borrower type context configurations
+        const activeCheck = await Borrowed.findOne({ admNo, bookTitle: { $regex: new RegExp(`^${bookTitle.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')}$`, 'i') } });
         if (activeCheck) {
-            return res.status(400).json({ error: `Outstanding transaction detected. Admission Number ${admNo} currently holds an unreturned library asset.` });
+            return res.status(400).json({ error: `Outstanding transaction detected. Identity item "${admNo}" currently holds a duplicate copy of this asset.` });
         }
 
         // Case-insensitive lookups protect against typing discrepancies on the frontend
@@ -174,12 +184,19 @@ app.post('/api/borrowed', async (req, res) => {
             return res.status(400).json({ error: `Insufficient stock allocation. "${bookMatch.title}" copies are fully checked out.` });
         }
 
-        // Deduct exactly one catalog item instance from physical tracking assets safely
+        // Deduct exactly one catalog item instance safely
         bookMatch.qty -= 1;
         await bookMatch.save();
 
         const authorizedBorrowing = new Borrowed({
-            admNo, name, form, bookTitle: bookMatch.title, issueDate, dueDate, status: "Active"
+            borrowerType: borrowerType || 'Student',
+            admNo, 
+            name, 
+            form, 
+            bookTitle: bookMatch.title, 
+            issueDate, 
+            dueDate, 
+            status: "Active"
         });
         await authorizedBorrowing.save();
 
@@ -192,14 +209,24 @@ app.post('/api/borrowed', async (req, res) => {
 // --------------------------------------------------------------------------
 // DELETE: Check-In/Mark Return and Credit Volume Back to Stock
 // --------------------------------------------------------------------------
-app.delete('/api/borrowed/:admNo', async (req, res) => {
+app.delete('/api/borrowed/:idOrAdmNo', async (req, res) => {
     try {
-        const activeIssue = await Borrowed.findOne({ admNo: req.params.admNo });
+        const identifier = req.params.idOrAdmNo;
+        
+        // Flexible controller verification lookup selector logic (checks explicit DB id first, then falls back to global code)
+        let activeIssue = null;
+        if (mongoose.Types.ObjectId.isValid(identifier)) {
+            activeIssue = await Borrowed.findById(identifier);
+        }
         if (!activeIssue) {
-            return res.status(404).json({ error: "No active transactional ledger matched this identification mapping code." });
+            activeIssue = await Borrowed.findOne({ admNo: identifier });
         }
 
-        // Return exact asset token reference back to matching book configuration profile safely
+        if (!activeIssue) {
+            return res.status(404).json({ error: "No active transactional ledger matched this identification parameter." });
+        }
+
+        // Return asset reference safely back to matching database book inventory
         await Book.findOneAndUpdate(
             { title: activeIssue.bookTitle },
             { $inc: { qty: 1 } }
