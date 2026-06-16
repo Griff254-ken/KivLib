@@ -4,7 +4,7 @@
  */
 
 // 1. API Configuration Context Layer
-const API_BASE_URL = 'https://kivlibback.onrender.com/api'; 
+const API_BASE_URL = 'https://kivlibback.onrender.com/api';
 
 // 2. Monolithic Application State Engine
 let state = {
