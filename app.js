@@ -1,6 +1,6 @@
 /**
  * Kivaywa High School LMS - Core Frontend Orchestrator & API Integration Engine
- * Architecture: Monolithic Database-Driven REST Integration (Production Grade)
+ * Architecture: Monolithic Database-Driven REST Integration with Chart.js Visualization
  */
 
 // 1. API Configuration Context Layer
@@ -10,10 +10,13 @@ const API_BASE_URL = 'https://kivlibback.onrender.com/api';
 let state = {
     books: [],
     borrowed: [],
-    fines: [] // Tracked balances calculated from overdue cycles or structural damages
+    fines: []
 };
 
-// 3. Application Lifecycle Event Listeners
+// 3. Chart Instance
+let borrowingChart = null;
+
+// 4. Application Lifecycle Event Listeners
 document.addEventListener("DOMContentLoaded", async () => {
     initializeTabNavigation();
     setInitialSystemDateContext();
@@ -22,14 +25,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     await synchronizeApplicationData();
 });
 
-// 4. Interface Tab Navigation Subsystem
+// 5. Interface Tab Navigation Subsystem
 function initializeTabNavigation() {
     const menuButtons = document.querySelectorAll(".menu-item");
     menuButtons.forEach(button => {
         button.addEventListener("click", () => {
             menuButtons.forEach(btn => btn.classList.remove("active"));
             button.classList.add("active");
-            
             const selectedTab = button.getAttribute("data-tab");
             switchTab(selectedTab);
         });
@@ -42,8 +44,6 @@ function switchTab(tabId) {
     if (activeTab) {
         activeTab.classList.add("active");
     }
-    
-    // Manage sidebar active styles if tabs are switched programmatically via sub-buttons
     const matchingMenuBtn = document.querySelector(`.menu-item[data-tab="${tabId}"]`);
     if (matchingMenuBtn) {
         document.querySelectorAll(".menu-item").forEach(btn => btn.classList.remove("active"));
@@ -51,7 +51,7 @@ function switchTab(tabId) {
     }
 }
 
-// 5. Native Toast Notification Engine Link
+// 6. Toast Notification Engine
 function showToast(message, type = 'success', duration = 4000) {
     const container = document.getElementById('toast-container');
     if (!container) return;
@@ -78,7 +78,7 @@ function showToast(message, type = 'success', duration = 4000) {
     }, duration);
 }
 
-// 6. High-Fidelity Data Synchronization Layer
+// 7. Data Synchronization Layer
 async function synchronizeApplicationData() {
     displayTableLoadingIndicators();
     
@@ -95,12 +95,12 @@ async function synchronizeApplicationData() {
         state.books = await booksResponse.json();
         state.borrowed = await borrowedResponse.json();
         
-        // Derive penalty structures from local data array
         calculateFinesSystemState();
-        
         updateOnlineStatusIndicator(true);
         renderAppLayout();
         populateBookTitleDatalist();
+        renderPopularBooks();
+        renderBorrowingChart();
     } catch (error) {
         console.error("System sync failed: ", error);
         updateOnlineStatusIndicator(false);
@@ -118,25 +118,132 @@ function updateOnlineStatusIndicator(isOnline) {
 }
 
 function calculateFinesSystemState() {
-    // Generate derived fine records for items flagged as Overdue
-    state.fines = state.borrowed.filter(item => item.status === "Overdue" || (parseInt(item.fineAmount) > 0)).map(item => {
-        const dateDue = new Date(item.dueDate);
-        const today = new Date();
-        const diffTime = Math.max(0, today - dateDue);
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        
-        return {
-            admNo: item.admNo,
-            name: item.name,
-            bookTitle: item.bookTitle,
-            daysOverdue: item.status === "Overdue" ? diffDays : 0,
-            conditionDeficit: item.conditionDeficit || "Good",
-            fineAmount: item.fineAmount || (diffDays * 20) // Standard KES 20 per day fine policy
-        };
+    state.fines = state.borrowed
+        .filter(item => item.status === "Overdue" || (parseInt(item.fineAmount) > 0))
+        .map(item => {
+            const dateDue = new Date(item.dueDate);
+            const today = new Date();
+            const diffTime = Math.max(0, today - dateDue);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            return {
+                admNo: item.admNo,
+                name: item.name,
+                bookTitle: item.bookTitle,
+                daysOverdue: item.status === "Overdue" ? diffDays : 0,
+                conditionDeficit: item.conditionDeficit || "Good",
+                fineAmount: item.fineAmount || (diffDays * 20)
+            };
+        });
+}
+
+// 8. Chart Rendering Engine
+function renderBorrowingChart() {
+    const canvas = document.getElementById('borrowingTrendsChart');
+    if (!canvas) return;
+
+    // Destroy existing chart if it exists
+    if (borrowingChart) {
+        borrowingChart.destroy();
+        borrowingChart = null;
+    }
+
+    // Hide fallback text
+    const fallback = canvas.parentElement?.querySelector('.chart-fallback');
+    if (fallback) fallback.style.display = 'none';
+
+    // Prepare data - group borrowings by month
+    const monthlyData = {};
+    state.borrowed.forEach(item => {
+        if (item.issueDate) {
+            const date = new Date(item.issueDate);
+            const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+            monthlyData[monthKey] = (monthlyData[monthKey] || 0) + 1;
+        }
+    });
+
+    // Sort months chronologically
+    const sortedMonths = Object.keys(monthlyData).sort();
+    const labels = sortedMonths.map(month => {
+        const [year, monthNum] = month.split('-');
+        const date = new Date(parseInt(year), parseInt(monthNum) - 1);
+        return date.toLocaleString('default', { month: 'short', year: 'numeric' });
+    });
+    const data = sortedMonths.map(month => monthlyData[month]);
+
+    // If no data, show empty state
+    if (data.length === 0) {
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#888';
+        ctx.font = '14px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('No borrowing data available', canvas.width / 2, canvas.height / 2);
+        return;
+    }
+
+    // Create chart
+    const ctx = canvas.getContext('2d');
+    borrowingChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Books Borrowed',
+                data: data,
+                backgroundColor: 'rgba(111, 29, 43, 0.7)',
+                borderColor: 'rgba(111, 29, 43, 1)',
+                borderWidth: 2,
+                borderRadius: 6,
+                maxBarThickness: 40
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.raw} book(s) borrowed`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1,
+                        font: {
+                            size: 10
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(0,0,0,0.05)'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        font: {
+                            size: 10
+                        },
+                        maxRotation: 45,
+                        minRotation: 30
+                    }
+                }
+            }
+        }
     });
 }
 
-// 7. UI Rendering & Presentation Grid Engines
+// 9. UI Rendering Engines
 function renderAppLayout() {
     renderMetricDashboards();
     renderRecentTransactionsGrid();
@@ -220,21 +327,28 @@ function renderRegistryTableGrid(borrowedArray) {
         return;
     }
 
-    tbody.innerHTML = borrowedArray.map(item => `
-        <tr>
-            <td><code>${escapeHtml(item.admNo)}</code></td>
-            <td><small>${escapeHtml(item.borrowerType || 'Student')}</small></td>
-            <td><b>${escapeHtml(item.name)}</b></td>
-            <td>${escapeHtml(item.form)}</td>
-            <td>${escapeHtml(item.bookTitle)}</td>
-            <td><span style="color: ${item.status === 'Overdue' ? '#ef4444' : 'inherit'}; font-weight:600;">${escapeHtml(item.dueDate)}</span></td>
-            <td>
-                <button class="btn btn-secondary btn-sm" onclick="populateAndOpenReturnModal('${item.admNo}')">
-                    <i class="fa-solid fa-arrow-rotate-left"></i> Check-In
-                </button>
-            </td>
-        </tr>
-    `).join('');
+    tbody.innerHTML = borrowedArray.map(item => {
+        const form = item.form || 'N/A';
+        const borrowerType = item.borrowerType || 'Student';
+        const dueDate = item.dueDate || 'N/A';
+        const status = item.status || 'Active';
+        
+        return `
+            <tr>
+                <td><code>${escapeHtml(item.admNo)}</code></td>
+                <td><small>${escapeHtml(borrowerType)}</small></td>
+                <td><b>${escapeHtml(item.name)}</b></td>
+                <td>${escapeHtml(form)}</td>
+                <td>${escapeHtml(item.bookTitle)}</td>
+                <td><span style="color: ${status === 'Overdue' ? '#ef4444' : 'inherit'}; font-weight:600;">${escapeHtml(dueDate)}</span></td>
+                <td>
+                    <button class="btn btn-secondary btn-sm" onclick="populateAndOpenReturnModal('${item.admNo}')">
+                        <i class="fa-solid fa-arrow-rotate-left"></i> Check-In
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
 }
 
 function renderFinesTableGrid(finesArray) {
@@ -269,29 +383,65 @@ function populateBookTitleDatalist() {
     datalist.innerHTML = state.books.map(book => `<option value="${escapeHtml(book.title)}">${escapeHtml(book.category)}</option>`).join('');
 }
 
-// 8. Dynamic Event Binding Anchors
-function attachFormSubmissionHandlers() {
-    document.getElementById("add-book-form")?.addEventListener("submit", handleBookAdd);
-    document.getElementById("issue-book-form")?.addEventListener("submit", handleBookIssue);
-    document.getElementById("return-book-form")?.addEventListener("submit", handleReturnBookSubmit);
+function renderPopularBooks() {
+    const list = document.getElementById('popular-books-list');
+    if (!list) return;
     
-    // Wire local input queries to real-time keystroke processing listeners
-    document.getElementById("book-search")?.addEventListener("input", filterBooks);
-    document.getElementById("registry-search")?.addEventListener("input", filterRegistry);
+    const counts = {};
+    state.borrowed.forEach(b => {
+        const title = b.bookTitle || 'Unknown';
+        counts[title] = (counts[title] || 0) + 1;
+    });
+    
+    const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 3);
+    
+    if (sorted.length === 0) {
+        list.innerHTML = `<li style="padding:10px 0; color:#888;">No borrowing data yet.</li>`;
+        return;
+    }
+    
+    list.innerHTML = sorted.map(([title, count], idx) => `
+        <li style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: ${idx < sorted.length-1 ? '1px solid #eee' : 'none'};">
+            <span>${idx+1}. ${escapeHtml(title)}</span>
+            <strong style="color: var(--kivaywa-maroon, #6f1d2b);">${count} Issues</strong>
+        </li>
+    `).join('');
+}
+
+// 10. Event Binding
+function attachFormSubmissionHandlers() {
+    const addBookForm = document.getElementById("add-book-form");
+    const issueBookForm = document.getElementById("issue-book-form");
+    const returnBookForm = document.getElementById("return-book-form");
+    
+    if (addBookForm) addBookForm.addEventListener("submit", handleBookAdd);
+    if (issueBookForm) issueBookForm.addEventListener("submit", handleBookIssue);
+    if (returnBookForm) returnBookForm.addEventListener("submit", handleReturnBookSubmit);
+    
+    const bookSearch = document.getElementById("book-search");
+    const registrySearch = document.getElementById("registry-search");
+    
+    if (bookSearch) bookSearch.addEventListener("input", filterBooks);
+    if (registrySearch) registrySearch.addEventListener("input", filterRegistry);
 }
 
 function attachUtilityButtonHandlers() {
-    document.getElementById("export-db-btn")?.addEventListener("click", exportSystemBackupSnapshot);
-    document.getElementById("import-db-btn")?.addEventListener("click", () => {
-        const fileInput = document.createElement("input");
-        fileInput.type = "file";
-        fileInput.accept = ".json";
-        fileInput.onchange = (e) => importSystemBackupSnapshot(e);
-        fileInput.click();
-    });
+    const exportBtn = document.getElementById("export-db-btn");
+    const importBtn = document.getElementById("import-db-btn");
+    
+    if (exportBtn) exportBtn.addEventListener("click", exportSystemBackupSnapshot);
+    if (importBtn) {
+        importBtn.addEventListener("click", () => {
+            const fileInput = document.createElement("input");
+            fileInput.type = "file";
+            fileInput.accept = ".json";
+            fileInput.onchange = (e) => importSystemBackupSnapshot(e);
+            fileInput.click();
+        });
+    }
 }
 
-// 9. Core Business Logic & Transactional Handlers
+// 11. Business Logic Handlers
 async function handleBookAdd(e) {
     e.preventDefault();
     
@@ -360,14 +510,15 @@ function populateAndOpenReturnModal(admNo) {
         const searchInput = document.getElementById("return-search-id");
         if (searchInput) searchInput.value = loanRecord.admNo;
         
-        // Auto-compute baseline overdue fines before showing UI modal view
         const dateDue = new Date(loanRecord.dueDate);
         const today = new Date();
         if (today > dateDue) {
             const diffDays = Math.ceil((today - dateDue) / (1000 * 60 * 60 * 24));
-            document.getElementById("return-fine").value = diffDays * 20;
+            const fineInput = document.getElementById("return-fine");
+            if (fineInput) fineInput.value = diffDays * 20;
         } else {
-            document.getElementById("return-fine").value = 0;
+            const fineInput = document.getElementById("return-fine");
+            if (fineInput) fineInput.value = 0;
         }
     }
     openModal("return-book-modal");
@@ -386,7 +537,6 @@ async function handleReturnBookSubmit(e) {
     }
 
     try {
-        // Core execution updates parameters or updates state logs contextually
         const response = await fetch(`${API_BASE_URL}/borrowed/${activeLoan.id || identifier}`, { 
             method: 'DELETE' 
         });
@@ -423,11 +573,10 @@ async function handleBookDelete(isbn) {
 
 async function handleClearFine(admNo) {
     showToast(`Processing receipt settlement ledger entry for ${admNo}...`, "info");
-    // Fine settlement sequence updates state or syncs values back down
     state.borrowed = state.borrowed.map(item => {
         if (item.admNo === admNo) {
             item.fineAmount = 0;
-            item.status = "Active"; // Clear overdue configuration flags
+            item.status = "Active";
         }
         return item;
     });
@@ -436,9 +585,12 @@ async function handleClearFine(admNo) {
     showToast("Fine registry updated. Balances set to zero.", "success");
 }
 
-// 10. Search & Dynamic Frontend Content Filters
+// 12. Search Filters
 function filterBooks() {
-    const query = document.getElementById("book-search").value.toLowerCase().trim();
+    const searchInput = document.getElementById("book-search");
+    if (!searchInput) return;
+    
+    const query = searchInput.value.toLowerCase().trim();
     const filtered = state.books.filter(book => 
         book.title.toLowerCase().includes(query) || 
         book.author.toLowerCase().includes(query) || 
@@ -448,7 +600,10 @@ function filterBooks() {
 }
 
 function filterRegistry() {
-    const query = document.getElementById("registry-search").value.toLowerCase().trim();
+    const searchInput = document.getElementById("registry-search");
+    if (!searchInput) return;
+    
+    const query = searchInput.value.toLowerCase().trim();
     const filtered = state.borrowed.filter(item => 
         item.name.toLowerCase().includes(query) || 
         item.admNo.includes(query) ||
@@ -457,7 +612,7 @@ function filterRegistry() {
     renderRegistryTableGrid(filtered);
 }
 
-// 11. Offline Snapshots & System Integrity Backup Utilities
+// 13. Backup Utilities
 function exportSystemBackupSnapshot() {
     try {
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state));
@@ -482,6 +637,9 @@ function importSystemBackupSnapshot(e) {
                 state = parsedState;
                 calculateFinesSystemState();
                 renderAppLayout();
+                populateBookTitleDatalist();
+                renderPopularBooks();
+                renderBorrowingChart();
                 showToast("System parameters updated from source backup file.", "success");
             } else {
                 throw new Error("Invalid structure formatting inside parsed file configuration.");
@@ -493,7 +651,7 @@ function importSystemBackupSnapshot(e) {
     fileReader.readAsText(e.target.files[0]);
 }
 
-// 12. Auxiliary Modals & Form Control Setup Layer
+// 14. Modal Controls
 function openModal(id) { 
     const modal = document.getElementById(id);
     if (modal) modal.classList.add("open"); 
@@ -513,7 +671,7 @@ function setInitialSystemDateContext() {
         issueDateInput.value = today.toISOString().split('T')[0];
         
         const futureReturnDate = new Date(today);
-        futureReturnDate.setDate(today.getDate() + 14); // 2 Weeks Borrow Window
+        futureReturnDate.setDate(today.getDate() + 14);
         returnDateInput.value = futureReturnDate.toISOString().split('T')[0];
     }
 }
@@ -539,10 +697,11 @@ function renderDataSyncFailureState(message) {
 }
 
 function escapeHtml(string) {
+    if (!string) return '';
     return String(string).replace(/[&<>"']/g, s => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[s]));
 }
 
-// 13. Global Scope Execution Registration Hooks
+// 15. Global Scope Registration
 window.switchTab = switchTab;
 window.openModal = openModal;
 window.closeModal = closeModal;
