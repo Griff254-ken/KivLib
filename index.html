@@ -3,18 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Kivaywa High School Library Management System - Comprehensive book catalog, borrowing registry, and fine management">
+    <meta name="theme-color" content="#7a1e2e">
     <title>Kivaywa High School · Library System</title>
+    
+    <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Styles -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <!-- SIDEBAR -->
-    <aside class="sidebar" id="sidebar">
+    <!-- ==================== SIDEBAR ==================== -->
+    <aside class="sidebar" id="sidebar" role="navigation" aria-label="Main navigation">
         <div class="sidebar-brand">
-            <div class="brand-logo">
+            <div class="brand-logo" aria-hidden="true">
                 <i class="fa-solid fa-book-open-reader"></i>
             </div>
             <div class="brand-text">
@@ -24,32 +37,36 @@
         </div>
 
         <nav class="sidebar-nav">
-            <div class="nav-section-label">NAVIGATION</div>
-            <button class="nav-item active" data-tab="dashboard">
-                <span class="nav-icon"><i class="fa-solid fa-chart-pie"></i></span>
+            <div class="nav-section-label" aria-hidden="true">NAVIGATION</div>
+            
+            <button class="nav-item active" data-tab="dashboard" role="tab" aria-selected="true" aria-controls="dashboard-tab">
+                <span class="nav-icon" aria-hidden="true"><i class="fa-solid fa-chart-pie"></i></span>
                 <span class="nav-label">Dashboard</span>
-                <span class="nav-indicator"></span>
+                <span class="nav-indicator" aria-hidden="true"></span>
             </button>
-            <button class="nav-item" data-tab="books">
-                <span class="nav-icon"><i class="fa-solid fa-books"></i></span>
+            
+            <button class="nav-item" data-tab="books" role="tab" aria-selected="false" aria-controls="books-tab">
+                <span class="nav-icon" aria-hidden="true"><i class="fa-solid fa-books"></i></span>
                 <span class="nav-label">Book Catalog</span>
-                <span class="nav-indicator"></span>
+                <span class="nav-indicator" aria-hidden="true"></span>
             </button>
-            <button class="nav-item" data-tab="students">
-                <span class="nav-icon"><i class="fa-solid fa-arrow-right-arrow-left"></i></span>
+            
+            <button class="nav-item" data-tab="students" role="tab" aria-selected="false" aria-controls="students-tab">
+                <span class="nav-icon" aria-hidden="true"><i class="fa-solid fa-arrow-right-arrow-left"></i></span>
                 <span class="nav-label">Borrowing Registry</span>
-                <span class="nav-indicator"></span>
+                <span class="nav-indicator" aria-hidden="true"></span>
             </button>
-            <button class="nav-item" data-tab="fines">
-                <span class="nav-icon"><i class="fa-solid fa-scale-balanced"></i></span>
+            
+            <button class="nav-item" data-tab="fines" role="tab" aria-selected="false" aria-controls="fines-tab">
+                <span class="nav-icon" aria-hidden="true"><i class="fa-solid fa-scale-balanced"></i></span>
                 <span class="nav-label">Fines & Penalties</span>
-                <span class="nav-indicator"></span>
+                <span class="nav-indicator" aria-hidden="true"></span>
             </button>
         </nav>
 
         <div class="sidebar-bottom">
             <div class="system-status">
-                <span class="status-dot" id="status-dot"></span>
+                <span class="status-dot" id="status-dot" role="status" aria-label="System status"></span>
                 <span class="status-text" id="status-text">Connecting...</span>
             </div>
             <div class="sidebar-school">
@@ -59,22 +76,22 @@
         </div>
     </aside>
 
-    <!-- MAIN -->
+    <!-- ==================== MAIN CONTENT ==================== -->
     <main class="main" id="main">
 
         <!-- TOP BAR -->
-        <header class="topbar">
+        <header class="topbar" role="banner">
             <div class="topbar-left">
-                <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
-                    <i class="fa-solid fa-bars"></i>
+                <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar navigation">
+                    <i class="fa-solid fa-bars" aria-hidden="true"></i>
                 </button>
                 <div class="topbar-breadcrumb" id="breadcrumb">
                     <span>Dashboard</span>
                 </div>
             </div>
             <div class="topbar-right">
-                <div class="topbar-date">
-                    <i class="fa-regular fa-calendar"></i>
+                <div class="topbar-date" aria-live="polite">
+                    <i class="fa-regular fa-calendar" aria-hidden="true"></i>
                     <span id="current-date"></span>
                 </div>
                 <div class="topbar-profile">
@@ -82,16 +99,16 @@
                         <span class="profile-name">Librarian</span>
                         <span class="profile-role">System Administrator</span>
                     </div>
-                    <div class="profile-avatar">
+                    <div class="profile-avatar" role="img" aria-label="Librarian avatar">
                         <span>K</span>
-                        <div class="avatar-ring"></div>
+                        <div class="avatar-ring" aria-hidden="true"></div>
                     </div>
                 </div>
             </div>
         </header>
 
-        <!-- DASHBOARD TAB -->
-        <div class="tab-panel active" id="dashboard-tab">
+        <!-- ==================== DASHBOARD TAB ==================== -->
+        <section class="tab-panel active" id="dashboard-tab" role="tabpanel" aria-label="Dashboard">
 
             <div class="page-header">
                 <div>
@@ -99,88 +116,97 @@
                     <p class="page-subtitle">Here's what's happening in your library today.</p>
                 </div>
                 <div class="page-actions">
-                    <button class="btn btn-ghost btn-sm" id="export-db-btn">
-                        <i class="fa-solid fa-download"></i> Export Backup
+                    <button class="btn btn-ghost btn-sm" id="export-db-btn" aria-label="Export database backup">
+                        <i class="fa-solid fa-download" aria-hidden="true"></i> Export Backup
                     </button>
-                    <button class="btn btn-ghost btn-sm" id="import-db-btn">
-                        <i class="fa-solid fa-upload"></i> Restore
+                    <button class="btn btn-ghost btn-sm" id="import-db-btn" aria-label="Restore from backup">
+                        <i class="fa-solid fa-upload" aria-hidden="true"></i> Restore
                     </button>
                 </div>
             </div>
 
             <!-- METRIC CARDS -->
-            <div class="metrics-grid">
-                <div class="metric-card mc-maroon">
+            <div class="metrics-grid" role="list">
+                <div class="metric-card mc-maroon" role="listitem">
                     <div class="mc-body">
                         <div class="mc-label">Total Volumes</div>
-                        <div class="mc-value" id="total-books-count">—</div>
+                        <div class="mc-value" id="total-books-count" aria-live="polite">—</div>
                         <div class="mc-sub">Books in inventory</div>
                     </div>
-                    <div class="mc-icon"><i class="fa-solid fa-book"></i></div>
-                    <div class="mc-glow"></div>
+                    <div class="mc-icon" aria-hidden="true"><i class="fa-solid fa-book"></i></div>
+                    <div class="mc-glow" aria-hidden="true"></div>
                 </div>
-                <div class="metric-card mc-blue">
+                
+                <div class="metric-card mc-blue" role="listitem">
                     <div class="mc-body">
                         <div class="mc-label">Currently Issued</div>
-                        <div class="mc-value" id="issued-books-count">—</div>
+                        <div class="mc-value" id="issued-books-count" aria-live="polite">—</div>
                         <div class="mc-sub">Active borrowings</div>
                     </div>
-                    <div class="mc-icon"><i class="fa-solid fa-arrow-right-arrow-left"></i></div>
-                    <div class="mc-glow"></div>
+                    <div class="mc-icon" aria-hidden="true"><i class="fa-solid fa-arrow-right-arrow-left"></i></div>
+                    <div class="mc-glow" aria-hidden="true"></div>
                 </div>
-                <div class="metric-card mc-amber">
+                
+                <div class="metric-card mc-amber" role="listitem">
                     <div class="mc-body">
                         <div class="mc-label">Overdue Returns</div>
-                        <div class="mc-value" id="overdue-books-count">—</div>
+                        <div class="mc-value" id="overdue-books-count" aria-live="polite">—</div>
                         <div class="mc-sub">Require follow-up</div>
                     </div>
-                    <div class="mc-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
-                    <div class="mc-glow"></div>
+                    <div class="mc-icon" aria-hidden="true"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                    <div class="mc-glow" aria-hidden="true"></div>
                 </div>
-                <div class="metric-card mc-red">
+                
+                <div class="metric-card mc-red" role="listitem">
                     <div class="mc-body">
                         <div class="mc-label">Outstanding Fines</div>
-                        <div class="mc-value" id="total-fines-count">—</div>
+                        <div class="mc-value" id="total-fines-count" aria-live="polite">—</div>
                         <div class="mc-sub">Pending collection</div>
                     </div>
-                    <div class="mc-icon"><i class="fa-solid fa-sack-xmark"></i></div>
-                    <div class="mc-glow"></div>
+                    <div class="mc-icon" aria-hidden="true"><i class="fa-solid fa-sack-xmark"></i></div>
+                    <div class="mc-glow" aria-hidden="true"></div>
                 </div>
             </div>
 
             <!-- ANALYTICS ROW -->
             <div class="analytics-row">
-                <div class="glass-card chart-card">
+                <article class="glass-card chart-card">
                     <div class="glass-card-header">
                         <div>
-                            <h2 class="glass-card-title"><i class="fa-solid fa-chart-column"></i> Borrowing Activity</h2>
+                            <h2 class="glass-card-title">
+                                <i class="fa-solid fa-chart-column" aria-hidden="true"></i> 
+                                Borrowing Activity
+                            </h2>
                             <p class="glass-card-sub">Monthly book checkouts</p>
                         </div>
                     </div>
                     <div class="chart-wrap">
-                        <canvas id="borrowingTrendsChart"></canvas>
-                        <div class="chart-empty" id="chart-empty">
-                            <i class="fa-solid fa-chart-column"></i>
+                        <canvas id="borrowingTrendsChart" aria-label="Borrowing activity chart"></canvas>
+                        <div class="chart-empty" id="chart-empty" role="status">
+                            <i class="fa-solid fa-chart-column" aria-hidden="true"></i>
                             <span>No borrowing data yet</span>
                         </div>
                     </div>
-                </div>
+                </article>
 
-                <div class="glass-card popular-card">
+                <article class="glass-card popular-card">
                     <div class="glass-card-header">
                         <div>
-                            <h2 class="glass-card-title"><i class="fa-solid fa-fire"></i> Most Borrowed</h2>
+                            <h2 class="glass-card-title">
+                                <i class="fa-solid fa-fire" aria-hidden="true"></i> 
+                                Most Borrowed
+                            </h2>
                             <p class="glass-card-sub">Top titles this term</p>
                         </div>
                     </div>
-                    <ul class="popular-list" id="popular-books-list">
-                        <li class="popular-empty">No data available</li>
+                    <ul class="popular-list" id="popular-books-list" role="list">
+                        <li class="popular-empty" role="status">No data available</li>
                     </ul>
-                </div>
+                </article>
             </div>
 
             <!-- RECENT TRANSACTIONS -->
-            <div class="glass-card">
+            <article class="glass-card">
                 <div class="glass-card-header">
                     <div>
                         <h2 class="glass-card-title">Recent Transactions</h2>
@@ -188,74 +214,83 @@
                     </div>
                     <div class="header-actions">
                         <button class="btn btn-ghost btn-sm" onclick="openModal('return-book-modal')">
-                            <i class="fa-solid fa-arrow-rotate-left"></i> Quick Check-In
+                            <i class="fa-solid fa-arrow-rotate-left" aria-hidden="true"></i> Quick Check-In
                         </button>
                         <button class="btn btn-primary btn-sm" onclick="switchTab('students')">
-                            View All <i class="fa-solid fa-arrow-right"></i>
+                            View All <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
                         </button>
                     </div>
                 </div>
                 <div class="table-wrap">
-                    <table class="data-table">
+                    <table class="data-table" role="table">
                         <thead>
                             <tr>
-                                <th>ID / Adm No</th>
-                                <th>Type</th>
-                                <th>Name</th>
-                                <th>Book Title</th>
-                                <th>Due Date</th>
-                                <th>Status</th>
+                                <th scope="col">ID / Adm No</th>
+                                <th scope="col">Type</th>
+                                <th scope="col">Name</th>
+                                <th scope="col">Book Title</th>
+                                <th scope="col">Due Date</th>
+                                <th scope="col">Status</th>
                             </tr>
                         </thead>
                         <tbody id="recent-transactions-tbody">
-                            <tr><td colspan="6" class="table-loading"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</td></tr>
+                            <tr>
+                                <td colspan="6" class="table-loading">
+                                    <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i> Loading...
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
-            </div>
-        </div>
+            </article>
+        </section>
 
-        <!-- BOOKS TAB -->
-        <div class="tab-panel" id="books-tab">
+        <!-- ==================== BOOKS TAB ==================== -->
+        <section class="tab-panel" id="books-tab" role="tabpanel" aria-label="Book catalog">
             <div class="page-header">
                 <div>
                     <h1 class="page-title">Book Catalog</h1>
                     <p class="page-subtitle">Manage your library's entire inventory.</p>
                 </div>
                 <button class="btn btn-primary" onclick="openModal('add-book-modal')">
-                    <i class="fa-solid fa-plus"></i> Add New Book
+                    <i class="fa-solid fa-plus" aria-hidden="true"></i> Add New Book
                 </button>
             </div>
-            <div class="glass-card">
+            
+            <article class="glass-card">
                 <div class="glass-card-header">
-                    <div class="search-box">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                        <input type="text" id="book-search" placeholder="Search by title, author, or ISBN…">
+                    <div class="search-box" role="search">
+                        <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                        <input type="text" id="book-search" placeholder="Search by title, author, or ISBN…" aria-label="Search books">
                     </div>
-                    <div class="catalog-stats" id="catalog-stats"></div>
+                    <div class="catalog-stats" id="catalog-stats" aria-live="polite"></div>
                 </div>
                 <div class="table-wrap">
-                    <table class="data-table">
+                    <table class="data-table" role="table">
                         <thead>
                             <tr>
-                                <th>ISBN / Acc No</th>
-                                <th>Title</th>
-                                <th>Author</th>
-                                <th>Subject Category</th>
-                                <th>Qty Available</th>
-                                <th>Actions</th>
+                                <th scope="col">ISBN / Acc No</th>
+                                <th scope="col">Title</th>
+                                <th scope="col">Author</th>
+                                <th scope="col">Subject Category</th>
+                                <th scope="col">Qty Available</th>
+                                <th scope="col">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="books-table-tbody">
-                            <tr><td colspan="6" class="table-loading"><i class="fa-solid fa-spinner fa-spin"></i> Loading catalog...</td></tr>
+                            <tr>
+                                <td colspan="6" class="table-loading">
+                                    <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i> Loading catalog...
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
-            </div>
-        </div>
+            </article>
+        </section>
 
-        <!-- BORROWING REGISTRY TAB -->
-        <div class="tab-panel" id="students-tab">
+        <!-- ==================== BORROWING REGISTRY TAB ==================== -->
+        <section class="tab-panel" id="students-tab" role="tabpanel" aria-label="Borrowing registry">
             <div class="page-header">
                 <div>
                     <h1 class="page-title">Borrowing Registry</h1>
@@ -263,109 +298,119 @@
                 </div>
                 <div class="page-actions">
                     <button class="btn btn-ghost" onclick="openModal('return-book-modal')">
-                        <i class="fa-solid fa-arrow-rotate-left"></i> Return Book
+                        <i class="fa-solid fa-arrow-rotate-left" aria-hidden="true"></i> Return Book
                     </button>
                     <button class="btn btn-primary" onclick="openModal('issue-book-modal')">
-                        <i class="fa-solid fa-hand-holding-hand"></i> Issue Book
+                        <i class="fa-solid fa-hand-holding-hand" aria-hidden="true"></i> Issue Book
                     </button>
                 </div>
             </div>
-            <div class="glass-card">
+            
+            <article class="glass-card">
                 <div class="glass-card-header">
-                    <div class="search-box">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                        <input type="text" id="registry-search" placeholder="Search by name, ID, or book title…">
+                    <div class="search-box" role="search">
+                        <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                        <input type="text" id="registry-search" placeholder="Search by name, ID, or book title…" aria-label="Search registry">
                     </div>
-                    <div class="filter-chips">
-                        <button class="chip active" data-filter="all">All</button>
-                        <button class="chip" data-filter="Active">Active</button>
-                        <button class="chip" data-filter="Overdue">Overdue</button>
+                    <div class="filter-chips" role="group" aria-label="Filter transactions">
+                        <button class="chip active" data-filter="all" role="radio" aria-checked="true">All</button>
+                        <button class="chip" data-filter="Active" role="radio" aria-checked="false">Active</button>
+                        <button class="chip" data-filter="Overdue" role="radio" aria-checked="false">Overdue</button>
                     </div>
                 </div>
                 <div class="table-wrap">
-                    <table class="data-table">
+                    <table class="data-table" role="table">
                         <thead>
                             <tr>
-                                <th>ID / Adm No</th>
-                                <th>Type</th>
-                                <th>Name</th>
-                                <th>Class / Dept</th>
-                                <th>Book Title</th>
-                                <th>Due Date</th>
-                                <th>Action</th>
+                                <th scope="col">ID / Adm No</th>
+                                <th scope="col">Type</th>
+                                <th scope="col">Name</th>
+                                <th scope="col">Class / Dept</th>
+                                <th scope="col">Book Title</th>
+                                <th scope="col">Due Date</th>
+                                <th scope="col">Action</th>
                             </tr>
                         </thead>
                         <tbody id="registry-table-tbody">
-                            <tr><td colspan="7" class="table-loading"><i class="fa-solid fa-spinner fa-spin"></i> Loading registry...</td></tr>
+                            <tr>
+                                <td colspan="7" class="table-loading">
+                                    <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i> Loading registry...
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
-            </div>
-        </div>
+            </article>
+        </section>
 
-        <!-- FINES TAB -->
-        <div class="tab-panel" id="fines-tab">
+        <!-- ==================== FINES TAB ==================== -->
+        <section class="tab-panel" id="fines-tab" role="tabpanel" aria-label="Fines and penalties">
             <div class="page-header">
                 <div>
                     <h1 class="page-title">Fines & Penalties</h1>
                     <p class="page-subtitle">Manage overdue charges and condition penalties.</p>
                 </div>
-                <div class="fines-summary" id="fines-summary"></div>
+                <div class="fines-summary" id="fines-summary" aria-live="polite"></div>
             </div>
-            <div class="glass-card">
+            
+            <article class="glass-card">
                 <div class="table-wrap">
-                    <table class="data-table">
+                    <table class="data-table" role="table">
                         <thead>
                             <tr>
-                                <th>ID / Adm No</th>
-                                <th>Name</th>
-                                <th>Book Title</th>
-                                <th>Days Overdue</th>
-                                <th>Condition</th>
-                                <th>Fine (KES)</th>
-                                <th>Action</th>
+                                <th scope="col">ID / Adm No</th>
+                                <th scope="col">Name</th>
+                                <th scope="col">Book Title</th>
+                                <th scope="col">Days Overdue</th>
+                                <th scope="col">Condition</th>
+                                <th scope="col">Fine (KES)</th>
+                                <th scope="col">Action</th>
                             </tr>
                         </thead>
                         <tbody id="fines-table-tbody">
-                            <tr><td colspan="7" class="table-loading"><i class="fa-solid fa-spinner fa-spin"></i> Loading fines...</td></tr>
+                            <tr>
+                                <td colspan="7" class="table-loading">
+                                    <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i> Loading fines...
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
-            </div>
-        </div>
+            </article>
+        </section>
 
     </main>
 
     <!-- ==================== MODALS ==================== -->
 
     <!-- ADD BOOK MODAL -->
-    <div class="modal-backdrop" id="add-book-modal">
+    <div class="modal-backdrop" id="add-book-modal" role="dialog" aria-modal="true" aria-labelledby="add-book-title">
         <div class="modal">
             <div class="modal-head">
                 <div class="modal-title-wrap">
-                    <div class="modal-icon-badge"><i class="fa-solid fa-book"></i></div>
+                    <div class="modal-icon-badge" aria-hidden="true"><i class="fa-solid fa-book"></i></div>
                     <div>
-                        <h2>Add New Book</h2>
+                        <h2 id="add-book-title">Add New Book</h2>
                         <p>Register a new title to the library catalog</p>
                     </div>
                 </div>
-                <button class="modal-close" onclick="closeModal('add-book-modal')">
-                    <i class="fa-solid fa-xmark"></i>
+                <button class="modal-close" onclick="closeModal('add-book-modal')" aria-label="Close dialog">
+                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
                 </button>
             </div>
-            <form id="add-book-form">
+            <form id="add-book-form" novalidate>
                 <div class="modal-body">
                     <div class="form-field">
-                        <label for="book-title">Book Title</label>
+                        <label for="book-title">Book Title <span class="required" aria-hidden="true">*</span></label>
                         <input type="text" id="book-title" required placeholder="e.g., Blossoms of the Savannah">
                     </div>
                     <div class="form-row-2">
                         <div class="form-field">
-                            <label for="book-author">Author</label>
+                            <label for="book-author">Author <span class="required" aria-hidden="true">*</span></label>
                             <input type="text" id="book-author" required placeholder="e.g., H.R. Ole Kulet">
                         </div>
                         <div class="form-field">
-                            <label for="book-isbn">ISBN / Acc No</label>
+                            <label for="book-isbn">ISBN / Acc No <span class="required" aria-hidden="true">*</span></label>
                             <input type="text" id="book-isbn" required placeholder="e.g., 9789966360">
                         </div>
                     </div>
@@ -394,14 +439,14 @@
                                     <option value="Agriculture">Agriculture</option>
                                     <option value="Computer Studies">Computer Studies</option>
                                     <option value="Business Studies">Business Studies</option>
-                                    <option value="Business Studies">Art and design</option>
-                                    <option value="Business Studies">French</option>
-                                    <option value="Business Studies">Germany</option>
+                                    <option value="Art and Design">Art and Design</option>
+                                    <option value="French">French</option>
+                                    <option value="German">German</option>
                                 </optgroup>
                             </select>
                         </div>
                         <div class="form-field">
-                            <label for="book-qty">Total Stock Quantity</label>
+                            <label for="book-qty">Total Stock Quantity <span class="required" aria-hidden="true">*</span></label>
                             <input type="number" id="book-qty" min="1" required placeholder="e.g., 45">
                         </div>
                     </div>
@@ -409,7 +454,7 @@
                 <div class="modal-foot">
                     <button type="button" class="btn btn-ghost" onclick="closeModal('add-book-modal')">Cancel</button>
                     <button type="submit" class="btn btn-primary">
-                        <i class="fa-solid fa-floppy-disk"></i> Save to Catalog
+                        <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Save to Catalog
                     </button>
                 </div>
             </form>
@@ -417,84 +462,91 @@
     </div>
 
     <!-- ISSUE BOOK MODAL -->
-    <div class="modal-backdrop" id="issue-book-modal">
+    <div class="modal-backdrop" id="issue-book-modal" role="dialog" aria-modal="true" aria-labelledby="issue-book-title">
         <div class="modal">
             <div class="modal-head">
                 <div class="modal-title-wrap">
-                    <div class="modal-icon-badge" style="background: rgba(5,150,105,0.12); color:#059669;"><i class="fa-solid fa-hand-holding-hand"></i></div>
+                    <div class="modal-icon-badge" style="background: rgba(5,150,105,0.12); color:#059669;" aria-hidden="true">
+                        <i class="fa-solid fa-hand-holding-hand"></i>
+                    </div>
                     <div>
-                        <h2>Issue Book</h2>
+                        <h2 id="issue-book-title">Issue Book</h2>
                         <p>Check out a book to a student or staff member</p>
                     </div>
                 </div>
-                <button class="modal-close" onclick="closeModal('issue-book-modal')">
-                    <i class="fa-solid fa-xmark"></i>
+                <button class="modal-close" onclick="closeModal('issue-book-modal')" aria-label="Close dialog">
+                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
                 </button>
             </div>
-            <form id="issue-book-form">
+            <form id="issue-book-form" novalidate>
                 <div class="modal-body">
                     <div class="form-row-2">
                         <div class="form-field">
-                            <label for="borrow-type">Borrower Type</label>
-                            <select id="borrow-type">
+                            <label for="borrow-type">Borrower Type <span class="required" aria-hidden="true">*</span></label>
+                            <select id="borrow-type" required>
                                 <option value="Student">Student</option>
                                 <option value="Teacher/Staff">Teacher / Staff</option>
                             </select>
                         </div>
                         <div class="form-field">
-                            <label for="borrow-adm">Admission No / Staff ID</label>
+                            <label for="borrow-adm">Admission No / Staff ID <span class="required" aria-hidden="true">*</span></label>
                             <input type="text" id="borrow-adm" required placeholder="e.g., 8432">
                         </div>
                     </div>
                     <div class="form-row-2">
                         <div class="form-field">
-                            <label for="borrow-name">Full Name</label>
+                            <label for="borrow-name">Full Name <span class="required" aria-hidden="true">*</span></label>
                             <input type="text" id="borrow-name" required placeholder="e.g., John Kiprop">
                         </div>
                         <div class="form-field">
-                            <label for="borrow-form">Class / Department</label>
-                            <select id="borrow-form">
-                                <option value="Form 4 West">Form 4 West</option>
-                                <option value="Form 4 East">Form 4 East</option>
-                                <option value="Form 4 North">Form 4 North</option>
-                                <option value="Form 4 South">Form 4 South</option>
-                                <option value="Form 4 A">Form 4 Central</option>
-                                <option value="Form 4 B">Form 4 Green </option>
-                                <option value="Form 4 A">Form 4 Maroon</option>
-                                <option value="Form 4 B">Form 4 Blue</option>
-                                <option value="Form 3 West">Form 3 West</option>
-                                <option value="Form 3 East">Form 3 East</option>
-                                <option value="Form 3 South">Form 3 South</option>
-                                <option value="Form 3 A">Form 3 Central</option>
-                                <option value="Form 3 B">Form 3 Green </option>
-                                <option value="Form 3 A">Form 3 Maroon</option>
-                                <option value="Form 3 B">Form 3 Blue</option>
-                                <option value="Grade 10 Princeton">Grade 10 Princeton</option>
-                                <option value="Humanities Dept">Humanities Dept (Staff)</option>
-                                <option value="Science Dept">Science Dept (Staff)</option>
-                                <option value="Administration">Administration (Staff)</option>
+                            <label for="borrow-form">Class / Department <span class="required" aria-hidden="true">*</span></label>
+                            <select id="borrow-form" required>
+                                <optgroup label="Form 4">
+                                    <option value="Form 4 West">Form 4 West</option>
+                                    <option value="Form 4 East">Form 4 East</option>
+                                    <option value="Form 4 North">Form 4 North</option>
+                                    <option value="Form 4 South">Form 4 South</option>
+                                    <option value="Form 4 Central">Form 4 Central</option>
+                                    <option value="Form 4 Green">Form 4 Green</option>
+                                    <option value="Form 4 Maroon">Form 4 Maroon</option>
+                                    <option value="Form 4 Blue">Form 4 Blue</option>
+                                </optgroup>
+                                <optgroup label="Form 3">
+                                    <option value="Form 3 West">Form 3 West</option>
+                                    <option value="Form 3 East">Form 3 East</option>
+                                    <option value="Form 3 South">Form 3 South</option>
+                                    <option value="Form 3 Central">Form 3 Central</option>
+                                    <option value="Form 3 Green">Form 3 Green</option>
+                                    <option value="Form 3 Maroon">Form 3 Maroon</option>
+                                    <option value="Form 3 Blue">Form 3 Blue</option>
+                                </optgroup>
+                                <optgroup label="Staff">
+                                    <option value="Humanities Dept">Humanities Dept</option>
+                                    <option value="Science Dept">Science Dept</option>
+                                    <option value="Administration">Administration</option>
+                                </optgroup>
                             </select>
                         </div>
                     </div>
                     <div class="form-field">
-                        <label for="borrow-book">Book Title</label>
+                        <label for="borrow-book">Book Title <span class="required" aria-hidden="true">*</span></label>
                         <input type="text" id="borrow-book" list="inventory-datalist" required placeholder="Type to search catalog…">
                     </div>
                     <div class="form-row-2">
                         <div class="form-field">
-                            <label for="borrow-issue-date">Issue Date</label>
+                            <label for="borrow-issue-date">Issue Date <span class="required" aria-hidden="true">*</span></label>
                             <input type="date" id="borrow-issue-date" required>
                         </div>
                         <div class="form-field">
-                            <label for="borrow-return-date">Return Due Date</label>
+                            <label for="borrow-return-date">Return Due Date <span class="required" aria-hidden="true">*</span></label>
                             <input type="date" id="borrow-return-date" required>
                         </div>
                     </div>
                 </div>
                 <div class="modal-foot">
                     <button type="button" class="btn btn-ghost" onclick="closeModal('issue-book-modal')">Cancel</button>
-                    <button type="submit" class="btn btn-primary" style="background: var(--clr-green);">
-                        <i class="fa-solid fa-check"></i> Confirm Issue
+                    <button type="submit" class="btn btn-success">
+                        <i class="fa-solid fa-check" aria-hidden="true"></i> Confirm Issue
                     </button>
                 </div>
             </form>
@@ -502,27 +554,29 @@
     </div>
 
     <!-- RETURN BOOK MODAL -->
-    <div class="modal-backdrop" id="return-book-modal">
+    <div class="modal-backdrop" id="return-book-modal" role="dialog" aria-modal="true" aria-labelledby="return-book-title">
         <div class="modal">
             <div class="modal-head">
                 <div class="modal-title-wrap">
-                    <div class="modal-icon-badge" style="background: rgba(245,158,11,0.12); color:#d97706;"><i class="fa-solid fa-arrow-rotate-left"></i></div>
+                    <div class="modal-icon-badge" style="background: rgba(245,158,11,0.12); color:#d97706;" aria-hidden="true">
+                        <i class="fa-solid fa-arrow-rotate-left"></i>
+                    </div>
                     <div>
-                        <h2>Return Book</h2>
+                        <h2 id="return-book-title">Return Book</h2>
                         <p>Process a book check-in and assess condition</p>
                     </div>
                 </div>
-                <button class="modal-close" onclick="closeModal('return-book-modal')">
-                    <i class="fa-solid fa-xmark"></i>
+                <button class="modal-close" onclick="closeModal('return-book-modal')" aria-label="Close dialog">
+                    <i class="fa-solid fa-xmark" aria-hidden="true"></i>
                 </button>
             </div>
-            <form id="return-book-form">
+            <form id="return-book-form" novalidate>
                 <div class="modal-body">
                     <div class="form-field">
-                        <label for="return-search-id">Admission No / Staff ID</label>
+                        <label for="return-search-id">Admission No / Staff ID <span class="required" aria-hidden="true">*</span></label>
                         <input type="text" id="return-search-id" required placeholder="Enter ID to fetch active loan…">
                     </div>
-                    <div class="loan-preview" id="loan-preview" style="display:none;">
+                    <div class="loan-preview" id="loan-preview" style="display:none;" role="status" aria-live="polite">
                         <div class="loan-preview-row">
                             <span class="lp-label">Borrower</span>
                             <span class="lp-value" id="lp-name">—</span>
@@ -554,17 +608,19 @@
                 </div>
                 <div class="modal-foot">
                     <button type="button" class="btn btn-ghost" onclick="closeModal('return-book-modal')">Cancel</button>
-                    <button type="submit" class="btn btn-primary" style="background:#d97706;">
-                        <i class="fa-solid fa-check"></i> Process Check-In
+                    <button type="submit" class="btn" style="background:#d97706; color:#fff;">
+                        <i class="fa-solid fa-check" aria-hidden="true"></i> Process Check-In
                     </button>
                 </div>
             </form>
         </div>
     </div>
 
+    <!-- ==================== HELPERS ==================== -->
     <datalist id="inventory-datalist"></datalist>
-    <div id="toast-stack"></div>
+    <div id="toast-stack" role="status" aria-live="polite"></div>
 
+    <!-- ==================== SCRIPTS ==================== -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="app.js"></script>
 </body>
