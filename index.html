@@ -3,401 +3,562 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kivaywa High School | Library Management System</title>
-    <link rel="icon" type="image/png" href="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTEXKg3F8mkTHc73zQo-a_wI7I_0e2TM3t3z8YZ0gQYYw&s=10">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>Kivaywa High School · Library System</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📚</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <aside class="sidebar">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
         <div class="sidebar-brand">
-            <i class="fa-solid fa-book-open-reader"></i>
-            <div>
-                <h2>KIVAYWA HIGH</h2>
-                <p>Library System</p>
+            <div class="brand-logo">
+                <i class="fa-solid fa-book-open-reader"></i>
+            </div>
+            <div class="brand-text">
+                <span class="brand-name">KIVAYWA</span>
+                <span class="brand-sub">Library System</span>
             </div>
         </div>
-        <nav class="sidebar-menu">
-            <button class="menu-item active" data-tab="dashboard">
-                <i class="fa-solid fa-chart-pie"></i> Dashboard
+
+        <nav class="sidebar-nav">
+            <div class="nav-section-label">NAVIGATION</div>
+            <button class="nav-item active" data-tab="dashboard">
+                <span class="nav-icon"><i class="fa-solid fa-chart-pie"></i></span>
+                <span class="nav-label">Dashboard</span>
+                <span class="nav-indicator"></span>
             </button>
-            <button class="menu-item" data-tab="books">
-                <i class="fa-solid fa-book"></i> Book Catalog
+            <button class="nav-item" data-tab="books">
+                <span class="nav-icon"><i class="fa-solid fa-books"></i></span>
+                <span class="nav-label">Book Catalog</span>
+                <span class="nav-indicator"></span>
             </button>
-            <button class="menu-item" data-tab="students">
-                <i class="fa-solid fa-hand-holding-hand"></i> Borrowing Registry
+            <button class="nav-item" data-tab="students">
+                <span class="nav-icon"><i class="fa-solid fa-arrow-right-arrow-left"></i></span>
+                <span class="nav-label">Borrowing Registry</span>
+                <span class="nav-indicator"></span>
             </button>
-            <button class="menu-item" data-tab="fines">
-                <i class="fa-solid fa-money-bill-wave"></i> Fines & Penalties
+            <button class="nav-item" data-tab="fines">
+                <span class="nav-icon"><i class="fa-solid fa-scale-balanced"></i></span>
+                <span class="nav-label">Fines & Penalties</span>
+                <span class="nav-indicator"></span>
             </button>
         </nav>
-        <div class="sidebar-footer">
-            <p>&copy; 2026 Kivaywa High School</p>
+
+        <div class="sidebar-bottom">
+            <div class="system-status">
+                <span class="status-dot" id="status-dot"></span>
+                <span class="status-text" id="status-text">Connecting...</span>
+            </div>
+            <div class="sidebar-school">
+                <small>&copy; 2026 Kivaywa High School</small>
+                <small class="motto">Knowledge Is Immortal</small>
+            </div>
         </div>
     </aside>
 
-    <main class="main-content">
-        <header class="top-navbar">
-            <div class="welcome-text">
-                <h1>Welcome Back, <span id="admin-name">Librarian</span></h1>
-                <p>Motto: KNOWLEDGE IS IMMORTAL</p>
-            </div>
-            <div class="user-profile">
-                <div class="profile-info">
-                    <span>System Admin</span>
-                    <small class="status-online">System Online</small>
+    <!-- MAIN -->
+    <main class="main" id="main">
+
+        <!-- TOP BAR -->
+        <header class="topbar">
+            <div class="topbar-left">
+                <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                <div class="topbar-breadcrumb" id="breadcrumb">
+                    <span>Dashboard</span>
                 </div>
-                <div class="avatar">K</div>
+            </div>
+            <div class="topbar-right">
+                <div class="topbar-date">
+                    <i class="fa-regular fa-calendar"></i>
+                    <span id="current-date"></span>
+                </div>
+                <div class="topbar-profile">
+                    <div class="profile-details">
+                        <span class="profile-name">Librarian</span>
+                        <span class="profile-role">System Administrator</span>
+                    </div>
+                    <div class="profile-avatar">
+                        <span>K</span>
+                        <div class="avatar-ring"></div>
+                    </div>
+                </div>
             </div>
         </header>
 
-        <div class="tab-content active" id="dashboard-tab">
-            <section class="metrics-grid">
-                <div class="card metric-card card-maroon">
-                    <div class="metric-icon"><i class="fa-solid fa-book"></i></div>
-                    <div class="metric-data">
-                        <h3 id="total-books-count">1,245</h3>
-                        <p>Total Volumes</p>
-                    </div>
-                </div>
-                <div class="card metric-card card-green">
-                    <div class="metric-icon"><i class="fa-solid fa-hand-holding-hand"></i></div>
-                    <div class="metric-data">
-                        <h3 id="issued-books-count">84</h3>
-                        <p>Books Out Now</p>
-                    </div>
-                </div>
-                <div class="card metric-card card-amber">
-                    <div class="metric-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
-                    <div class="metric-data">
-                        <h3 id="overdue-books-count">12</h3>
-                        <p>Overdue Returns</p>
-                    </div>
-                </div>
-                <div class="card metric-card card-red">
-                    <div class="metric-icon"><i class="fa-solid fa-sack-xmark"></i></div>
-                    <div class="metric-data">
-                        <h3 id="total-fines-count">KES 2,450</h3>
-                        <p>Outstanding Fines</p>
-                    </div>
-                </div>
-            </section>
+        <!-- DASHBOARD TAB -->
+        <div class="tab-panel active" id="dashboard-tab">
 
-            <div class="analytics-row" style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 20px;">
-                <div class="card graph-container">
-                    <div class="card-header">
-                        <h2><i class="fa-solid fa-chart-line"></i> Peak Borrowing Activity</h2>
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">Good <span id="greeting-time">Morning</span>, Librarian</h1>
+                    <p class="page-subtitle">Here's what's happening in your library today.</p>
+                </div>
+                <div class="page-actions">
+                    <button class="btn btn-ghost btn-sm" id="export-db-btn">
+                        <i class="fa-solid fa-download"></i> Export Backup
+                    </button>
+                    <button class="btn btn-ghost btn-sm" id="import-db-btn">
+                        <i class="fa-solid fa-upload"></i> Restore
+                    </button>
+                </div>
+            </div>
+
+            <!-- METRIC CARDS -->
+            <div class="metrics-grid">
+                <div class="metric-card mc-maroon">
+                    <div class="mc-body">
+                        <div class="mc-label">Total Volumes</div>
+                        <div class="mc-value" id="total-books-count">—</div>
+                        <div class="mc-sub">Books in inventory</div>
                     </div>
-                    <div class="chart-wrapper" style="height: 220px; display: flex; align-items: center; justify-content: center; background: #fdfdfd; border: 1px dashed #ddd; border-radius: 6px;">
+                    <div class="mc-icon"><i class="fa-solid fa-book"></i></div>
+                    <div class="mc-glow"></div>
+                </div>
+                <div class="metric-card mc-blue">
+                    <div class="mc-body">
+                        <div class="mc-label">Currently Issued</div>
+                        <div class="mc-value" id="issued-books-count">—</div>
+                        <div class="mc-sub">Active borrowings</div>
+                    </div>
+                    <div class="mc-icon"><i class="fa-solid fa-arrow-right-arrow-left"></i></div>
+                    <div class="mc-glow"></div>
+                </div>
+                <div class="metric-card mc-amber">
+                    <div class="mc-body">
+                        <div class="mc-label">Overdue Returns</div>
+                        <div class="mc-value" id="overdue-books-count">—</div>
+                        <div class="mc-sub">Require follow-up</div>
+                    </div>
+                    <div class="mc-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                    <div class="mc-glow"></div>
+                </div>
+                <div class="metric-card mc-red">
+                    <div class="mc-body">
+                        <div class="mc-label">Outstanding Fines</div>
+                        <div class="mc-value" id="total-fines-count">—</div>
+                        <div class="mc-sub">Pending collection</div>
+                    </div>
+                    <div class="mc-icon"><i class="fa-solid fa-sack-xmark"></i></div>
+                    <div class="mc-glow"></div>
+                </div>
+            </div>
+
+            <!-- ANALYTICS ROW -->
+            <div class="analytics-row">
+                <div class="glass-card chart-card">
+                    <div class="glass-card-header">
+                        <div>
+                            <h2 class="glass-card-title"><i class="fa-solid fa-chart-column"></i> Borrowing Activity</h2>
+                            <p class="glass-card-sub">Monthly book checkouts</p>
+                        </div>
+                    </div>
+                    <div class="chart-wrap">
                         <canvas id="borrowingTrendsChart"></canvas>
-                        <p class="chart-fallback" style="color: #888; font-size: 0.9rem;"><i class="fa-solid fa-square-poll-vertical"></i> Chart Canvas Ready for App JS Rendering Engine</p>
+                        <div class="chart-empty" id="chart-empty">
+                            <i class="fa-solid fa-chart-column"></i>
+                            <span>No borrowing data yet</span>
+                        </div>
                     </div>
                 </div>
-                <div class="card rankings-container">
-                    <div class="card-header">
-                        <h2><i class="fa-solid fa-fire"></i> Most Popular Books</h2>
+
+                <div class="glass-card popular-card">
+                    <div class="glass-card-header">
+                        <div>
+                            <h2 class="glass-card-title"><i class="fa-solid fa-fire"></i> Most Borrowed</h2>
+                            <p class="glass-card-sub">Top titles this term</p>
+                        </div>
                     </div>
-                    <ul class="popular-books-list" style="list-style: none; padding: 0; margin: 0;">
-                        <li style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee;">
-                            <span>1. Blossoms of the Savannah</span>
-                            <strong style="color: var(--kivaywa-maroon);">42 Issues</strong>
-                        </li>
-                        <li style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee;">
-                            <span>2. Kidagaa Kimemwozea</span>
-                            <strong style="color: var(--kivaywa-maroon);">38 Issues</strong>
-                        </li>
-                        <li style="display: flex; justify-content: space-between; padding: 10px 0;">
-                            <span>3. KLB Secondary Mathematics F4</span>
-                            <strong style="color: var(--kivaywa-maroon);">29 Issues</strong>
-                        </li>
+                    <ul class="popular-list" id="popular-books-list">
+                        <li class="popular-empty">No data available</li>
                     </ul>
                 </div>
             </div>
 
-            <div class="dashboard-layout">
-                <div class="card table-container">
-                    <div class="card-header">
-                        <h2>Recent Transactions</h2>
-                        <div class="card-header-actions">
-                            <button class="btn btn-secondary btn-sm" onclick="openModal('return-book-modal')" style="margin-right: 5px;">
-                                <i class="fa-solid fa-arrow-rotate-left"></i> Quick Check-In
-                            </button>
-                            <button class="btn btn-secondary btn-sm" onclick="switchTab('students')">View All</button>
-                        </div>
+            <!-- RECENT TRANSACTIONS -->
+            <div class="glass-card">
+                <div class="glass-card-header">
+                    <div>
+                        <h2 class="glass-card-title">Recent Transactions</h2>
+                        <p class="glass-card-sub">Last 5 borrowing events</p>
                     </div>
+                    <div class="header-actions">
+                        <button class="btn btn-ghost btn-sm" onclick="openModal('return-book-modal')">
+                            <i class="fa-solid fa-arrow-rotate-left"></i> Quick Check-In
+                        </button>
+                        <button class="btn btn-primary btn-sm" onclick="switchTab('students')">
+                            View All <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="table-wrap">
                     <table class="data-table">
                         <thead>
                             <tr>
                                 <th>ID / Adm No</th>
-                                <th>Borrower Category</th>
-                                <th>Borrower Name</th>
+                                <th>Type</th>
+                                <th>Name</th>
                                 <th>Book Title</th>
-                                <th>Issue Date</th>
+                                <th>Due Date</th>
                                 <th>Status</th>
                             </tr>
                         </thead>
-                        <tbody id="recent-transactions-tbody"></tbody>
+                        <tbody id="recent-transactions-tbody">
+                            <tr><td colspan="6" class="table-loading"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</td></tr>
+                        </tbody>
                     </table>
                 </div>
             </div>
+        </div>
 
-            <div class="admin-utilities-panel" style="margin-top: 25px; display: flex; justify-content: space-between; align-items: center; background-color: #fff; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-                <div class="utility-text">
-                    <h3 style="font-size: 1rem; margin: 0; color: #333;"><i class="fa-solid fa-database"></i> System Local Database Utilities</h3>
-                    <p style="font-size: 0.8rem; margin: 3px 0 0 0; color: #777;">Maintain data integrity by exporting or restoring system snapshots locally.</p>
+        <!-- BOOKS TAB -->
+        <div class="tab-panel" id="books-tab">
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">Book Catalog</h1>
+                    <p class="page-subtitle">Manage your library's entire inventory.</p>
                 </div>
-                <div class="utility-actions" style="display: flex; gap: 10px;">
-                    <button class="btn btn-secondary btn-sm" id="export-db-btn"><i class="fa-solid fa-download"></i> Export System Backup</button>
-                    <button class="btn btn-secondary btn-sm" id="import-db-btn"><i class="fa-solid fa-upload"></i> Restore Backup</button>
+                <button class="btn btn-primary" onclick="openModal('add-book-modal')">
+                    <i class="fa-solid fa-plus"></i> Add New Book
+                </button>
+            </div>
+            <div class="glass-card">
+                <div class="glass-card-header">
+                    <div class="search-box">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="book-search" placeholder="Search by title, author, or ISBN…">
+                    </div>
+                    <div class="catalog-stats" id="catalog-stats"></div>
+                </div>
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ISBN / Acc No</th>
+                                <th>Title</th>
+                                <th>Author</th>
+                                <th>Subject Category</th>
+                                <th>Qty Available</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="books-table-tbody">
+                            <tr><td colspan="6" class="table-loading"><i class="fa-solid fa-spinner fa-spin"></i> Loading catalog...</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
 
-        <div class="tab-content" id="books-tab">
-            <div class="card table-container">
-                <div class="card-header action-bar">
-                    <div class="search-box">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                        <input type="text" id="book-search" placeholder="Search by Title, Author, or ISBN...">
-                    </div>
-                    <button class="btn btn-primary" onclick="openModal('add-book-modal')">
-                        <i class="fa-solid fa-plus"></i> Add New Book
+        <!-- BORROWING REGISTRY TAB -->
+        <div class="tab-panel" id="students-tab">
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">Borrowing Registry</h1>
+                    <p class="page-subtitle">Track all active loans and check-outs.</p>
+                </div>
+                <div class="page-actions">
+                    <button class="btn btn-ghost" onclick="openModal('return-book-modal')">
+                        <i class="fa-solid fa-arrow-rotate-left"></i> Return Book
+                    </button>
+                    <button class="btn btn-primary" onclick="openModal('issue-book-modal')">
+                        <i class="fa-solid fa-hand-holding-hand"></i> Issue Book
                     </button>
                 </div>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>ISBN</th>
-                            <th>Title</th>
-                            <th>Author</th>
-                            <th>Category</th>
-                            <th>Available Qty</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="books-table-tbody"></tbody>
-                </table>
             </div>
-        </div>
-
-        <div class="tab-content" id="students-tab">
-            <div class="card table-container">
-                <div class="card-header action-bar">
+            <div class="glass-card">
+                <div class="glass-card-header">
                     <div class="search-box">
                         <i class="fa-solid fa-magnifying-glass"></i>
-                        <input type="text" id="registry-search" placeholder="Search by Student, Teacher, or ID...">
+                        <input type="text" id="registry-search" placeholder="Search by name, ID, or book title…">
                     </div>
-                    <div class="action-bar-buttons">
-                        <button class="btn btn-secondary" onclick="openModal('return-book-modal')" style="margin-right: 8px;">
-                            <i class="fa-solid fa-arrow-rotate-left"></i> Return Book (Check-In)
-                        </button>
-                        <button class="btn btn-primary" onclick="openModal('issue-book-modal')">
-                            <i class="fa-solid fa-hand-holding-hand"></i> Issue Book (Check-Out)
-                        </button>
+                    <div class="filter-chips">
+                        <button class="chip active" data-filter="all">All</button>
+                        <button class="chip" data-filter="Active">Active</button>
+                        <button class="chip" data-filter="Overdue">Overdue</button>
                     </div>
                 </div>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>ID / Adm No</th>
-                            <th>Type</th>
-                            <th>Name</th>
-                            <th>Class / Dept</th>
-                            <th>Book Title</th>
-                            <th>Return Due Date</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="registry-table-tbody"></tbody>
-                </table>
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID / Adm No</th>
+                                <th>Type</th>
+                                <th>Name</th>
+                                <th>Class / Dept</th>
+                                <th>Book Title</th>
+                                <th>Due Date</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="registry-table-tbody">
+                            <tr><td colspan="7" class="table-loading"><i class="fa-solid fa-spinner fa-spin"></i> Loading registry...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
-        <div class="tab-content" id="fines-tab">
-            <div class="card table-container">
-                <div class="card-header">
-                    <h2>Library Fines Registry & Fee Balance Auditing</h2>
+        <!-- FINES TAB -->
+        <div class="tab-panel" id="fines-tab">
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">Fines & Penalties</h1>
+                    <p class="page-subtitle">Manage overdue charges and condition penalties.</p>
                 </div>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>ID / Adm No</th>
-                            <th>Name</th>
-                            <th>Book Title</th>
-                            <th>Days Overdue</th>
-                            <th>Condition Deficit</th>
-                            <th>Fine Charge (KES)</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="fines-table-tbody">
+                <div class="fines-summary" id="fines-summary"></div>
+            </div>
+            <div class="glass-card">
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID / Adm No</th>
+                                <th>Name</th>
+                                <th>Book Title</th>
+                                <th>Days Overdue</th>
+                                <th>Condition</th>
+                                <th>Fine (KES)</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="fines-table-tbody">
+                            <tr><td colspan="7" class="table-loading"><i class="fa-solid fa-spinner fa-spin"></i> Loading fines...</td></tr>
                         </tbody>
-                </table>
+                    </table>
+                </div>
             </div>
         </div>
+
     </main>
 
-    <div class="modal-overlay" id="add-book-modal">
-        <div class="modal-card">
-            <div class="modal-header">
-                <h2>Add New Book Profile</h2>
-                <button class="close-modal-btn" onclick="closeModal('add-book-modal')">&times;</button>
+    <!-- ==================== MODALS ==================== -->
+
+    <!-- ADD BOOK MODAL -->
+    <div class="modal-backdrop" id="add-book-modal">
+        <div class="modal">
+            <div class="modal-head">
+                <div class="modal-title-wrap">
+                    <div class="modal-icon-badge"><i class="fa-solid fa-book"></i></div>
+                    <div>
+                        <h2>Add New Book</h2>
+                        <p>Register a new title to the library catalog</p>
+                    </div>
+                </div>
+                <button class="modal-close" onclick="closeModal('add-book-modal')">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
             </div>
             <form id="add-book-form">
-                <div class="form-group">
-                    <label for="book-title">Book Title</label>
-                    <input type="text" id="book-title" required placeholder="e.g., Blossoms of the Savannah">
+                <div class="modal-body">
+                    <div class="form-field">
+                        <label for="book-title">Book Title</label>
+                        <input type="text" id="book-title" required placeholder="e.g., Blossoms of the Savannah">
+                    </div>
+                    <div class="form-row-2">
+                        <div class="form-field">
+                            <label for="book-author">Author</label>
+                            <input type="text" id="book-author" required placeholder="e.g., H.R. Ole Kulet">
+                        </div>
+                        <div class="form-field">
+                            <label for="book-isbn">ISBN / Acc No</label>
+                            <input type="text" id="book-isbn" required placeholder="e.g., 9789966360">
+                        </div>
+                    </div>
+                    <div class="form-row-2">
+                        <div class="form-field">
+                            <label for="book-category">Subject Category</label>
+                            <select id="book-category">
+                                <optgroup label="Core Languages">
+                                    <option value="English">English Language</option>
+                                    <option value="Literature in English">Literature in English</option>
+                                    <option value="Kiswahili">Kiswahili</option>
+                                    <option value="Fasihi ya Kiswahili">Fasihi ya Kiswahili</option>
+                                </optgroup>
+                                <optgroup label="Mathematics & Sciences">
+                                    <option value="Mathematics">Mathematics</option>
+                                    <option value="Biology">Biology</option>
+                                    <option value="Chemistry">Chemistry</option>
+                                    <option value="Physics">Physics</option>
+                                </optgroup>
+                                <optgroup label="Humanities">
+                                    <option value="History and Government">History & Government</option>
+                                    <option value="Geography">Geography</option>
+                                    <option value="CRE">Christian Religious Education</option>
+                                </optgroup>
+                                <optgroup label="Applied Sciences">
+                                    <option value="Agriculture">Agriculture</option>
+                                    <option value="Computer Studies">Computer Studies</option>
+                                    <option value="Business Studies">Business Studies</option>
+                                    <option value="Business Studies">Art and design</option>
+                                    <option value="Business Studies">French</option>
+                                    <option value="Business Studies">Germany</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label for="book-qty">Total Stock Quantity</label>
+                            <input type="number" id="book-qty" min="1" required placeholder="e.g., 45">
+                        </div>
+                    </div>
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="book-author">Author</label>
-                        <input type="text" id="book-author" required placeholder="e.g., H.R. Ole Kulet">
-                    </div>
-                    <div class="form-group">
-                        <label for="book-isbn">ISBN / Acc No</label>
-                        <input type="text" id="book-isbn" required placeholder="e.g., 9789966360">
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="book-category">Subject Category</label>
-                        <select id="book-category">
-                            <optgroup label="Core Languages">
-                                <option value="English">English Language</option>
-                                <option value="Literature in English">Literature in English</option>
-                                <option value="Kiswahili">Kiswahili</option>
-                                <option value="Fasihi ya Kiswahili">Fasihi ya Kiswahili</option>
-                            </optgroup>
-                            <optgroup label="Mathematics & Sciences">
-                                <option value="Mathematics">Mathematics</option>
-                                <option value="Biology">Biology</option>
-                                <option value="Chemistry">Chemistry</option>
-                                <option value="Physics">Physics</option>
-                            </optgroup>
-                            <optgroup label="Humanities">
-                                <option value="History and Government">History and Government</option>
-                                <option value="Geography">Geography</option>
-                                <option value="CRE">Christian Religious Education (CRE)</option>
-                            </optgroup>
-                            <optgroup label="Applied Sciences & Technicals">
-                                <option value="Agriculture">Agriculture</option>
-                                <option value="Computer Studies">Computer Studies</option>
-                                <option value="Business Studies">Business Studies</option>
-                            </optgroup>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="book-qty">Total Stock Quantity</label>
-                        <input type="number" id="book-qty" min="1" required placeholder="e.g., 45">
-                    </div>
-                </div>
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('add-book-modal')">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save to Inventory</button>
+                <div class="modal-foot">
+                    <button type="button" class="btn btn-ghost" onclick="closeModal('add-book-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-floppy-disk"></i> Save to Catalog
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 
-    <div class="modal-overlay" id="issue-book-modal">
-        <div class="modal-card">
-            <div class="modal-header">
-                <h2>Issue Book Transaction</h2>
-                <button class="close-modal-btn" onclick="closeModal('issue-book-modal')">&times;</button>
+    <!-- ISSUE BOOK MODAL -->
+    <div class="modal-backdrop" id="issue-book-modal">
+        <div class="modal">
+            <div class="modal-head">
+                <div class="modal-title-wrap">
+                    <div class="modal-icon-badge" style="background: rgba(5,150,105,0.12); color:#059669;"><i class="fa-solid fa-hand-holding-hand"></i></div>
+                    <div>
+                        <h2>Issue Book</h2>
+                        <p>Check out a book to a student or staff member</p>
+                    </div>
+                </div>
+                <button class="modal-close" onclick="closeModal('issue-book-modal')">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
             </div>
             <form id="issue-book-form">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="borrow-type">Borrower Classification</label>
-                        <select id="borrow-type">
-                            <option value="Student">Student</option>
-                            <option value="Teacher/Staff">Teacher / School Staff</option>
-                        </select>
+                <div class="modal-body">
+                    <div class="form-row-2">
+                        <div class="form-field">
+                            <label for="borrow-type">Borrower Type</label>
+                            <select id="borrow-type">
+                                <option value="Student">Student</option>
+                                <option value="Teacher/Staff">Teacher / Staff</option>
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label for="borrow-adm">Admission No / Staff ID</label>
+                            <input type="text" id="borrow-adm" required placeholder="e.g., 8432">
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="borrow-adm">Admission No / Staff ID</label>
-                        <input type="text" id="borrow-adm" required placeholder="e.g., 8432">
+                    <div class="form-row-2">
+                        <div class="form-field">
+                            <label for="borrow-name">Full Name</label>
+                            <input type="text" id="borrow-name" required placeholder="e.g., John Kiprop">
+                        </div>
+                        <div class="form-field">
+                            <label for="borrow-form">Class / Department</label>
+                            <select id="borrow-form">
+                                <option value="Form 4 West">Form 4 West</option>
+                                <option value="Form 4 East">Form 4 East</option>
+                                <option value="Form 3 North">Form 3 North</option>
+                                <option value="Form 3 South">Form 3 South</option>
+                                <option value="Form 2 A">Form 2 A</option>
+                                <option value="Form 2 B">Form 2 B</option>
+                                <option value="Form 1 A">Form 1 A</option>
+                                <option value="Form 1 B">Form 1 B</option>
+                                <option value="Grade 10 Princeton">Grade 10 Princeton</option>
+                                <option value="Humanities Dept">Humanities Dept (Staff)</option>
+                                <option value="Science Dept">Science Dept (Staff)</option>
+                                <option value="Administration">Administration (Staff)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-field">
+                        <label for="borrow-book">Book Title</label>
+                        <input type="text" id="borrow-book" list="inventory-datalist" required placeholder="Type to search catalog…">
+                    </div>
+                    <div class="form-row-2">
+                        <div class="form-field">
+                            <label for="borrow-issue-date">Issue Date</label>
+                            <input type="date" id="borrow-issue-date" required>
+                        </div>
+                        <div class="form-field">
+                            <label for="borrow-return-date">Return Due Date</label>
+                            <input type="date" id="borrow-return-date" required>
+                        </div>
                     </div>
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="borrow-name">Borrower Full Name</label>
-                        <input type="text" id="borrow-name" required placeholder="e.g., John Kiprop">
-                    </div>
-                    <div class="form-group">
-                        <label for="borrow-form">Class / Stream or Department</label>
-                        <select id="borrow-form">
-                            <option value="Form 4 West">Form 4 West</option>
-                            <option value="Form 4 East">Form 4 East</option>
-                            <option value="Form 3 North">Form 3 North</option>
-                            <option value="Grade 10 Princeton">Grade 10 Princeton</option>
-                            <option value="Humanities Dept">Humanities Department (Staff)</option>
-                            <option value="Science Dept">Science Department (Staff)</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="borrow-book">Select Book Title</label>
-                    <input type="text" id="borrow-book" list="inventory-datalist" required placeholder="Type to search library index...">
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="borrow-issue-date">Date of Borrowing</label>
-                        <input type="date" id="borrow-issue-date" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="borrow-return-date">Expected Return Date</label>
-                        <input type="date" id="borrow-return-date" required>
-                    </div>
-                </div>
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('issue-book-modal')">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Confirm System Issue</button>
+                <div class="modal-foot">
+                    <button type="button" class="btn btn-ghost" onclick="closeModal('issue-book-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="background: var(--clr-green);">
+                        <i class="fa-solid fa-check"></i> Confirm Issue
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 
-    <div class="modal-overlay" id="return-book-modal">
-        <div class="modal-card">
-            <div class="modal-header">
-                <h2>Process Return Check-In</h2>
-                <button class="close-modal-btn" onclick="closeModal('return-book-modal')">&times;</button>
+    <!-- RETURN BOOK MODAL -->
+    <div class="modal-backdrop" id="return-book-modal">
+        <div class="modal">
+            <div class="modal-head">
+                <div class="modal-title-wrap">
+                    <div class="modal-icon-badge" style="background: rgba(245,158,11,0.12); color:#d97706;"><i class="fa-solid fa-arrow-rotate-left"></i></div>
+                    <div>
+                        <h2>Return Book</h2>
+                        <p>Process a book check-in and assess condition</p>
+                    </div>
+                </div>
+                <button class="modal-close" onclick="closeModal('return-book-modal')">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
             </div>
             <form id="return-book-form">
-                <div class="form-group">
-                    <label for="return-search-id">Enter Admission Number / Staff ID or Book ISBN</label>
-                    <input type="text" id="return-search-id" required placeholder="Type identifier to fetch active loan parameters...">
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="return-condition">Returned Condition Status</label>
-                        <select id="return-condition">
-                            <option value="Good">Good / Undamaged</option>
-                            <option value="Torn">Torn Pages / Minor Damage</option>
-                            <option value="Severe">Severe Structural Destruction</option>
-                            <option value="Lost">Lost Volume Designation</option>
-                        </select>
+                <div class="modal-body">
+                    <div class="form-field">
+                        <label for="return-search-id">Admission No / Staff ID</label>
+                        <input type="text" id="return-search-id" required placeholder="Enter ID to fetch active loan…">
                     </div>
-                    <div class="form-group">
-                        <label for="return-fine">Assess Penalty Surcharge (KES)</label>
-                        <input type="number" id="return-fine" min="0" value="0" placeholder="0.00">
+                    <div class="loan-preview" id="loan-preview" style="display:none;">
+                        <div class="loan-preview-row">
+                            <span class="lp-label">Borrower</span>
+                            <span class="lp-value" id="lp-name">—</span>
+                        </div>
+                        <div class="loan-preview-row">
+                            <span class="lp-label">Book</span>
+                            <span class="lp-value" id="lp-book">—</span>
+                        </div>
+                        <div class="loan-preview-row">
+                            <span class="lp-label">Due Date</span>
+                            <span class="lp-value" id="lp-due">—</span>
+                        </div>
+                    </div>
+                    <div class="form-row-2">
+                        <div class="form-field">
+                            <label for="return-condition">Returned Condition</label>
+                            <select id="return-condition">
+                                <option value="Good">Good — No Damage</option>
+                                <option value="Torn">Minor Damage</option>
+                                <option value="Severe">Severe Damage</option>
+                                <option value="Lost">Lost / Missing</option>
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label for="return-fine">Penalty Surcharge (KES)</label>
+                            <input type="number" id="return-fine" min="0" value="0">
+                        </div>
                     </div>
                 </div>
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('return-book-modal')">Cancel</button>
-                    <button type="submit" class="btn btn-primary" style="background-color: #2e7d32;">Process Verification Check-In</button>
+                <div class="modal-foot">
+                    <button type="button" class="btn btn-ghost" onclick="closeModal('return-book-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="background:#d97706;">
+                        <i class="fa-solid fa-check"></i> Process Check-In
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 
     <datalist id="inventory-datalist"></datalist>
+    <div id="toast-stack"></div>
 
-    <div id="toast-container" class="toast-container"></div>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
