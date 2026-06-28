@@ -1,316 +1,233 @@
 /**
- * Kivaywa High School LMS - Core Frontend Orchestrator & API Integration Engine
- * Architecture: Monolithic Database-Driven REST Integration with Chart.js Visualization
+ * Kivaywa High School — Library Management System
+ * Frontend Application Engine (v2.0)
+ * Backend: https://kivlibback.onrender.com/api (unchanged)
  */
 
-// 1. API Configuration Context Layer
-const API_BASE_URL = 'https://kivlibback.onrender.com/api';
+'use strict';
 
-// 2. Monolithic Application State Engine
-let state = {
-    books: [],
-    borrowed: [],
-    fines: []
-};
+// ── CONFIG ────────────────────────────────────────────────────────────────
+const API = 'https://kivlibback.onrender.com/api';
 
-// 3. Chart Instance
+// ── STATE ─────────────────────────────────────────────────────────────────
+let state = { books: [], borrowed: [], fines: [] };
 let borrowingChart = null;
+let registryFilter = 'all';
 
-// 4. Application Lifecycle Event Listeners
-document.addEventListener("DOMContentLoaded", async () => {
-    initializeTabNavigation();
-    setInitialSystemDateContext();
-    attachFormSubmissionHandlers();
-    attachUtilityButtonHandlers();
-    await synchronizeApplicationData();
+// ── BOOT ──────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    bootUI();
+    syncData();
 });
 
-// 5. Interface Tab Navigation Subsystem
-function initializeTabNavigation() {
-    const menuButtons = document.querySelectorAll(".menu-item");
-    menuButtons.forEach(button => {
-        button.addEventListener("click", () => {
-            menuButtons.forEach(btn => btn.classList.remove("active"));
-            button.classList.add("active");
-            const selectedTab = button.getAttribute("data-tab");
-            switchTab(selectedTab);
+function bootUI() {
+    setGreeting();
+    setDateDisplay();
+    initTabs();
+    initSidebarToggle();
+    initForms();
+    initSearch();
+    initUtilityButtons();
+    initReturnLoanPreview();
+    initRegistryFilters();
+}
+
+// ── TIME & DATE ───────────────────────────────────────────────────────────
+function setGreeting() {
+    const h = new Date().getHours();
+    const el = document.getElementById('greeting-time');
+    if (!el) return;
+    el.textContent = h < 12 ? 'Morning' : h < 17 ? 'Afternoon' : 'Evening';
+}
+
+function setDateDisplay() {
+    const el = document.getElementById('current-date');
+    if (!el) return;
+    el.textContent = new Date().toLocaleDateString('en-KE', {
+        weekday: 'short', day: 'numeric', month: 'long', year: 'numeric'
+    });
+}
+
+// ── TAB NAVIGATION ───────────────────────────────────────────────────────
+function initTabs() {
+    document.querySelectorAll('.nav-item').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tab = btn.dataset.tab;
+            switchTab(tab);
+            // Close mobile nav
+            document.body.classList.remove('mobile-nav-open');
         });
     });
 }
 
 function switchTab(tabId) {
-    document.querySelectorAll(".tab-content").forEach(content => content.classList.remove("active"));
-    const activeTab = document.getElementById(`${tabId}-tab`);
-    if (activeTab) {
-        activeTab.classList.add("active");
-    }
-    const matchingMenuBtn = document.querySelector(`.menu-item[data-tab="${tabId}"]`);
-    if (matchingMenuBtn) {
-        document.querySelectorAll(".menu-item").forEach(btn => btn.classList.remove("active"));
-        matchingMenuBtn.classList.add("active");
+    // Panels
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    const panel = document.getElementById(`${tabId}-tab`);
+    if (panel) panel.classList.add('active');
+
+    // Nav items
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+    const btn = document.querySelector(`.nav-item[data-tab="${tabId}"]`);
+    if (btn) btn.classList.add('active');
+
+    // Breadcrumb
+    const crumb = document.getElementById('breadcrumb');
+    if (crumb) {
+        const labels = { dashboard: 'Dashboard', books: 'Book Catalog', students: 'Borrowing Registry', fines: 'Fines & Penalties' };
+        crumb.textContent = labels[tabId] || tabId;
     }
 }
 
-// 6. Toast Notification Engine
-function showToast(message, type = 'success', duration = 4000) {
-    const container = document.getElementById('toast-container');
-    if (!container) return;
-
-    const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
-    
-    let icon = 'fa-check-circle';
-    if (type === 'error') icon = 'fa-exclamation-circle';
-    if (type === 'info') icon = 'fa-info-circle';
-    if (type === 'warning') icon = 'fa-triangle-exclamation';
-
-    toast.innerHTML = `
-        <i class="fa-solid ${icon} toast-icon"></i>
-        <span class="toast-message">${escapeHtml(message)}</span>
-        <button class="toast-close" onclick="this.parentElement.remove()">&times;</button>
-    `;
-
-    container.appendChild(toast);
-
-    setTimeout(() => {
-        toast.style.animation = 'toastFadeOut 0.4s ease forwards';
-        toast.addEventListener('animationend', () => toast.remove());
-    }, duration);
-}
-
-// 7. Data Synchronization Layer
-async function synchronizeApplicationData() {
-    displayTableLoadingIndicators();
-    
-    try {
-        const [booksResponse, borrowedResponse] = await Promise.all([
-            fetch(`${API_BASE_URL}/books`),
-            fetch(`${API_BASE_URL}/borrowed`)
-        ]);
-
-        if (!booksResponse.ok || !borrowedResponse.ok) {
-            throw new Error("Server inventory pipeline returned a bad response packet.");
+// ── SIDEBAR TOGGLE ────────────────────────────────────────────────────────
+function initSidebarToggle() {
+    const toggle = document.getElementById('sidebar-toggle');
+    if (!toggle) return;
+    toggle.addEventListener('click', () => {
+        if (window.innerWidth <= 900) {
+            document.body.classList.toggle('mobile-nav-open');
+        } else {
+            document.body.classList.toggle('sidebar-collapsed');
         }
+    });
+}
 
-        state.books = await booksResponse.json();
-        state.borrowed = await borrowedResponse.json();
+// ── DATA SYNC ─────────────────────────────────────────────────────────────
+async function syncData() {
+    try {
+        setOnlineStatus('connecting');
+        const [bRes, borRes] = await Promise.all([
+            fetch(`${API}/books`),
+            fetch(`${API}/borrowed`)
+        ]);
+        if (!bRes.ok || !borRes.ok) throw new Error('Server returned a non-OK response');
+
+        state.books    = await bRes.json();
+        state.borrowed = await borRes.json();
         
-        calculateFinesSystemState();
-        updateOnlineStatusIndicator(true);
-        renderAppLayout();
-        populateBookTitleDatalist();
-        renderPopularBooks();
-        renderBorrowingChart();
-    } catch (error) {
-        console.error("System sync failed: ", error);
-        updateOnlineStatusIndicator(false);
-        renderDataSyncFailureState(error.message);
-        showToast("Database synchronization failed. Running offline snapshot.", "error");
+        computeFines();
+        setOnlineStatus('online');
+        renderAll();
+        populateDatalist();
+    } catch (err) {
+        console.error('Sync error:', err);
+        setOnlineStatus('offline');
+        renderSyncError();
+        showToast('Unable to reach the server. Check your connection.', 'error');
     }
 }
 
-function updateOnlineStatusIndicator(isOnline) {
-    const statusText = document.querySelector(".status-online");
-    if (statusText) {
-        statusText.innerText = isOnline ? "System Online" : "Connection Error";
-        statusText.style.color = isOnline ? "#22c55e" : "#ef4444";
-    }
+function setOnlineStatus(status) {
+    const dot  = document.getElementById('status-dot');
+    const text = document.getElementById('status-text');
+    if (!dot || !text) return;
+    dot.className = 'status-dot';
+    if (status === 'online')      { dot.classList.add('online');  text.textContent = 'System Online'; }
+    else if (status === 'offline'){ dot.classList.add('offline'); text.textContent = 'Connection Error'; }
+    else                          { text.textContent = 'Connecting…'; }
 }
 
-function calculateFinesSystemState() {
+function computeFines() {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
     state.fines = state.borrowed
-        .filter(item => item.status === "Overdue" || (parseInt(item.fineAmount) > 0))
+        .filter(item => item.status === 'Overdue' || parseFloat(item.fineAmount) > 0)
         .map(item => {
-            const dateDue = new Date(item.dueDate);
-            const today = new Date();
-            const diffTime = Math.max(0, today - dateDue);
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            
+            const due = new Date(item.dueDate);
+            const diffMs = Math.max(0, today - due);
+            const days   = Math.ceil(diffMs / 86400000);
             return {
-                admNo: item.admNo,
-                name: item.name,
-                bookTitle: item.bookTitle,
-                daysOverdue: item.status === "Overdue" ? diffDays : 0,
-                conditionDeficit: item.conditionDeficit || "Good",
-                fineAmount: item.fineAmount || (diffDays * 20)
+                admNo:          item.admNo,
+                name:           item.name,
+                bookTitle:      item.bookTitle,
+                daysOverdue:    item.status === 'Overdue' ? days : 0,
+                conditionDeficit: item.conditionDeficit || 'Good',
+                fineAmount:     parseFloat(item.fineAmount) || (days * 20)
             };
         });
 }
 
-// 8. Chart Rendering Engine
-function renderBorrowingChart() {
-    const canvas = document.getElementById('borrowingTrendsChart');
-    if (!canvas) return;
-
-    // Destroy existing chart if it exists
-    if (borrowingChart) {
-        borrowingChart.destroy();
-        borrowingChart = null;
-    }
-
-    // Hide fallback text
-    const fallback = canvas.parentElement?.querySelector('.chart-fallback');
-    if (fallback) fallback.style.display = 'none';
-
-    // Prepare data - group borrowings by month
-    const monthlyData = {};
-    state.borrowed.forEach(item => {
-        if (item.issueDate) {
-            const date = new Date(item.issueDate);
-            const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-            monthlyData[monthKey] = (monthlyData[monthKey] || 0) + 1;
-        }
-    });
-
-    // Sort months chronologically
-    const sortedMonths = Object.keys(monthlyData).sort();
-    const labels = sortedMonths.map(month => {
-        const [year, monthNum] = month.split('-');
-        const date = new Date(parseInt(year), parseInt(monthNum) - 1);
-        return date.toLocaleString('default', { month: 'short', year: 'numeric' });
-    });
-    const data = sortedMonths.map(month => monthlyData[month]);
-
-    // If no data, show empty state
-    if (data.length === 0) {
-        const ctx = canvas.getContext('2d');
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = '#888';
-        ctx.font = '14px Inter, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('No borrowing data available', canvas.width / 2, canvas.height / 2);
-        return;
-    }
-
-    // Create chart
-    const ctx = canvas.getContext('2d');
-    borrowingChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Books Borrowed',
-                data: data,
-                backgroundColor: 'rgba(111, 29, 43, 0.7)',
-                borderColor: 'rgba(111, 29, 43, 1)',
-                borderWidth: 2,
-                borderRadius: 6,
-                maxBarThickness: 40
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return `${context.raw} book(s) borrowed`;
-                        }
-                    }
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        stepSize: 1,
-                        font: {
-                            size: 10
-                        }
-                    },
-                    grid: {
-                        color: 'rgba(0,0,0,0.05)'
-                    }
-                },
-                x: {
-                    grid: {
-                        display: false
-                    },
-                    ticks: {
-                        font: {
-                            size: 10
-                        },
-                        maxRotation: 45,
-                        minRotation: 30
-                    }
-                }
-            }
-        }
-    });
+// ── RENDER ALL ────────────────────────────────────────────────────────────
+function renderAll() {
+    renderMetrics();
+    renderRecentTransactions();
+    renderBooksTable(state.books);
+    renderRegistryTable(state.borrowed);
+    renderFinesTable(state.fines);
+    renderPopularBooks();
+    renderChart();
+    updateCatalogStats();
+    updateFinesSummary();
 }
 
-// 9. UI Rendering Engines
-function renderAppLayout() {
-    renderMetricDashboards();
-    renderRecentTransactionsGrid();
-    renderCatalogTableGrid(state.books);
-    renderRegistryTableGrid(state.borrowed);
-    renderFinesTableGrid(state.fines);
+// ── METRICS ───────────────────────────────────────────────────────────────
+function renderMetrics() {
+    const totalQty  = state.books.reduce((s, b) => s + parseInt(b.qty || 0), 0);
+    const overdue   = state.borrowed.filter(b => b.status === 'Overdue').length;
+    const totalFine = state.fines.reduce((s, f) => s + parseFloat(f.fineAmount || 0), 0);
+
+    setText('total-books-count',   totalQty.toLocaleString());
+    setText('issued-books-count',  state.borrowed.length.toLocaleString());
+    setText('overdue-books-count', overdue.toLocaleString());
+    setText('total-fines-count',   `KES ${totalFine.toLocaleString()}`);
 }
 
-function renderMetricDashboards() {
-    const totalBooksEl = document.getElementById("total-books-count");
-    const issuedBooksEl = document.getElementById("issued-books-count");
-    const overdueBooksEl = document.getElementById("overdue-books-count");
-    const totalFinesEl = document.getElementById("total-fines-count");
-
-    if (totalBooksEl) totalBooksEl.innerText = state.books.reduce((acc, curr) => acc + parseInt(curr.qty || 0), 0).toLocaleString();
-    if (issuedBooksEl) issuedBooksEl.innerText = state.borrowed.length.toLocaleString();
-    
-    const overdueCount = state.borrowed.filter(b => b.status === "Overdue").length;
-    if (overdueBooksEl) overdueBooksEl.innerText = overdueCount.toLocaleString();
-
-    const sumFines = state.fines.reduce((acc, curr) => acc + parseFloat(curr.fineAmount || 0), 0);
-    if (totalFinesEl) totalFinesEl.innerText = `KES ${sumFines.toLocaleString()}`;
-}
-
-function renderRecentTransactionsGrid() {
-    const tbody = document.getElementById("recent-transactions-tbody");
+// ── RECENT TRANSACTIONS ───────────────────────────────────────────────────
+function renderRecentTransactions() {
+    const tbody = document.getElementById('recent-transactions-tbody');
     if (!tbody) return;
-    
-    if (state.borrowed.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:20px;">No active transactions inside database.</td></tr>`;
+
+    const items = [...state.borrowed].reverse().slice(0, 5);
+
+    if (items.length === 0) {
+        tbody.innerHTML = emptyRow(6, 'No transactions recorded yet.');
         return;
     }
 
-    const recentItems = [...state.borrowed].reverse().slice(0, 5);
-    tbody.innerHTML = recentItems.map(item => {
-        const typeBadgeClass = item.borrowerType === 'Teacher/Staff' ? 'style="background:#0284c7; color:#fff; padding:2px 6px; border-radius:4px; font-size:0.75rem;"' : 'style="background:#f3f4f6; color:#1f2937; padding:2px 6px; border-radius:4px; font-size:0.75rem;"';
+    tbody.innerHTML = items.map(item => {
+        const isOverdue = item.status === 'Overdue';
+        const typeClass = item.borrowerType === 'Teacher/Staff' ? 'badge-teacher' : 'badge-student';
         return `
             <tr>
-                <td><b>${escapeHtml(item.admNo)}</b></td>
-                <td><span ${typeBadgeClass}>${escapeHtml(item.borrowerType || 'Student')}</span></td>
-                <td>${escapeHtml(item.name)}</td>
-                <td>${escapeHtml(item.bookTitle)}</td>
-                <td>${escapeHtml(item.dueDate)}</td>
-                <td><span class="badge ${item.status === 'Overdue' ? 'badge-warning' : 'badge-success'}">${escapeHtml(item.status)}</span></td>
+                <td><code>${esc(item.admNo)}</code></td>
+                <td><span class="badge ${typeClass}">${esc(item.borrowerType || 'Student')}</span></td>
+                <td><b>${esc(item.name)}</b></td>
+                <td>${esc(item.bookTitle)}</td>
+                <td style="color:${isOverdue ? 'var(--clr-danger)' : 'inherit'}; font-weight:${isOverdue ? '600' : '400'};">${esc(item.dueDate)}</td>
+                <td><span class="badge ${isOverdue ? 'badge-overdue' : 'badge-active'}">${esc(item.status)}</span></td>
             </tr>
         `;
     }).join('');
 }
 
-function renderCatalogTableGrid(booksArray) {
-    const tbody = document.getElementById("books-table-tbody");
+// ── BOOKS TABLE ───────────────────────────────────────────────────────────
+function renderBooksTable(books) {
+    const tbody = document.getElementById('books-table-tbody');
     if (!tbody) return;
 
-    if (booksArray.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#888; padding:30px;">No catalog records found matching parameters.</td></tr>`;
+    if (books.length === 0) {
+        tbody.innerHTML = emptyRow(6, 'No books found matching your search.');
         return;
     }
-    
-    tbody.innerHTML = booksArray.map(book => `
+
+    tbody.innerHTML = books.map(book => `
         <tr>
-            <td><code>${escapeHtml(book.isbn)}</code></td>
-            <td><b>${escapeHtml(book.title)}</b></td>
-            <td>${escapeHtml(book.author)}</td>
-            <td>${escapeHtml(book.category)}</td>
-            <td>${parseInt(book.qty)} pcs</td>
+            <td><code>${esc(book.isbn)}</code></td>
+            <td><b>${esc(book.title)}</b></td>
+            <td>${esc(book.author)}</td>
             <td>
-                <button class="btn btn-danger-outline btn-sm" onclick="handleBookDelete('${book.isbn}')">
+                <span style="background:var(--clr-parchment); border:1px solid var(--clr-border); padding:2px 8px; border-radius:999px; font-size:11px; font-weight:600; color:var(--clr-text-2);">
+                    ${esc(book.category)}
+                </span>
+            </td>
+            <td>
+                <span style="font-family:'JetBrains Mono',monospace; font-weight:600; color:var(--clr-green);">
+                    ${parseInt(book.qty)} pcs
+                </span>
+            </td>
+            <td>
+                <button class="btn btn-danger btn-sm" onclick="handleBookDelete('${esc(book.isbn)}')">
                     <i class="fa-solid fa-trash-can"></i> Remove
                 </button>
             </td>
@@ -318,31 +235,41 @@ function renderCatalogTableGrid(booksArray) {
     `).join('');
 }
 
-function renderRegistryTableGrid(borrowedArray) {
-    const tbody = document.getElementById("registry-table-tbody");
+function updateCatalogStats() {
+    const el = document.getElementById('catalog-stats');
+    if (el) el.textContent = `${state.books.length} titles · ${state.books.reduce((s,b) => s + parseInt(b.qty||0), 0).toLocaleString()} volumes`;
+}
+
+// ── REGISTRY TABLE ────────────────────────────────────────────────────────
+function renderRegistryTable(items) {
+    const tbody = document.getElementById('registry-table-tbody');
     if (!tbody) return;
 
-    if (borrowedArray.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#888; padding:30px;">No current logs active inside tracking grid.</td></tr>`;
+    // Apply filter
+    const filtered = registryFilter === 'all' ? items : items.filter(i => i.status === registryFilter);
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = emptyRow(7, registryFilter === 'all' ? 'No active borrowings found.' : `No ${registryFilter.toLowerCase()} records.`);
         return;
     }
 
-    tbody.innerHTML = borrowedArray.map(item => {
-        const form = item.form || 'N/A';
-        const borrowerType = item.borrowerType || 'Student';
-        const dueDate = item.dueDate || 'N/A';
-        const status = item.status || 'Active';
-        
+    tbody.innerHTML = filtered.map(item => {
+        const isOverdue = item.status === 'Overdue';
+        const typeClass = item.borrowerType === 'Teacher/Staff' ? 'badge-teacher' : 'badge-student';
         return `
             <tr>
-                <td><code>${escapeHtml(item.admNo)}</code></td>
-                <td><small>${escapeHtml(borrowerType)}</small></td>
-                <td><b>${escapeHtml(item.name)}</b></td>
-                <td>${escapeHtml(form)}</td>
-                <td>${escapeHtml(item.bookTitle)}</td>
-                <td><span style="color: ${status === 'Overdue' ? '#ef4444' : 'inherit'}; font-weight:600;">${escapeHtml(dueDate)}</span></td>
+                <td><code>${esc(item.admNo)}</code></td>
+                <td><span class="badge ${typeClass}">${esc(item.borrowerType || 'Student')}</span></td>
+                <td><b>${esc(item.name)}</b></td>
+                <td style="color:var(--clr-text-3);">${esc(item.form || '—')}</td>
+                <td>${esc(item.bookTitle)}</td>
                 <td>
-                    <button class="btn btn-secondary btn-sm" onclick="populateAndOpenReturnModal('${item.admNo}')">
+                    <span style="color:${isOverdue ? 'var(--clr-danger)' : 'var(--clr-text)'}; font-weight:${isOverdue ? '700' : '500'};">
+                        ${isOverdue ? '<i class="fa-solid fa-circle-exclamation"></i> ' : ''}${esc(item.dueDate)}
+                    </span>
+                </td>
+                <td>
+                    <button class="btn btn-ghost btn-sm" onclick="populateAndOpenReturnModal('${esc(item.admNo)}')">
                         <i class="fa-solid fa-arrow-rotate-left"></i> Check-In
                     </button>
                 </td>
@@ -351,360 +278,508 @@ function renderRegistryTableGrid(borrowedArray) {
     }).join('');
 }
 
-function renderFinesTableGrid(finesArray) {
-    const tbody = document.getElementById("fines-table-tbody");
+// ── FINES TABLE ───────────────────────────────────────────────────────────
+function renderFinesTable(fines) {
+    const tbody = document.getElementById('fines-table-tbody');
     if (!tbody) return;
 
-    if (finesArray.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:green; padding:20px; font-weight:500;"><i class="fa-solid fa-circle-check"></i> Clean Record Ledger: All fines cleared.</td></tr>`;
+    if (fines.length === 0) {
+        tbody.innerHTML = `
+            <tr><td colspan="7" style="text-align:center; padding:40px; color:var(--clr-success);">
+                <i class="fa-solid fa-circle-check" style="font-size:22px; margin-bottom:8px; display:block;"></i>
+                <b>All Clear</b> — No outstanding fines on record.
+            </td></tr>`;
         return;
     }
 
-    tbody.innerHTML = finesArray.map(fine => `
-        <tr>
-            <td><code>${escapeHtml(fine.admNo)}</code></td>
-            <td><b>${escapeHtml(fine.name)}</b></td>
-            <td>${escapeHtml(fine.bookTitle)}</td>
-            <td><span class="badge badge-warning">${fine.daysOverdue} Days</span></td>
-            <td><small>${escapeHtml(fine.conditionDeficit)}</small></td>
-            <td style="font-weight:700; color:#b91c1c;">KES ${parseFloat(fine.fineAmount).toLocaleString()}</td>
-            <td>
-                <button class="btn btn-primary btn-sm" onclick="handleClearFine('${fine.admNo}')" style="background-color:#2e7d32; border:none;">
-                    <i class="fa-solid fa-receipt"></i> Clear Charge
-                </button>
-            </td>
-        </tr>
-    `).join('');
+    tbody.innerHTML = fines.map(fine => {
+        const condColor = fine.conditionDeficit === 'Good' ? 'var(--clr-success)' : 'var(--clr-danger)';
+        return `
+            <tr>
+                <td><code>${esc(fine.admNo)}</code></td>
+                <td><b>${esc(fine.name)}</b></td>
+                <td>${esc(fine.bookTitle)}</td>
+                <td>
+                    <span class="badge ${fine.daysOverdue > 0 ? 'badge-overdue' : 'badge-student'}">
+                        ${fine.daysOverdue} day${fine.daysOverdue !== 1 ? 's' : ''}
+                    </span>
+                </td>
+                <td style="color:${condColor}; font-weight:600; font-size:12px;">${esc(fine.conditionDeficit)}</td>
+                <td style="font-family:'JetBrains Mono',monospace; font-weight:700; color:var(--clr-danger);">
+                    KES ${parseFloat(fine.fineAmount).toLocaleString()}
+                </td>
+                <td>
+                    <button class="btn btn-success btn-sm" onclick="handleClearFine('${esc(fine.admNo)}')">
+                        <i class="fa-solid fa-check"></i> Clear Fine
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
 }
 
-function populateBookTitleDatalist() {
-    const datalist = document.getElementById("inventory-datalist");
-    if (!datalist) return;
-    datalist.innerHTML = state.books.map(book => `<option value="${escapeHtml(book.title)}">${escapeHtml(book.category)}</option>`).join('');
+function updateFinesSummary() {
+    const el = document.getElementById('fines-summary');
+    if (!el) return;
+    const total = state.fines.reduce((s, f) => s + parseFloat(f.fineAmount || 0), 0);
+    if (total === 0) { el.style.display = 'none'; return; }
+    el.style.display = 'flex';
+    el.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> KES ${total.toLocaleString()} outstanding across ${state.fines.length} record${state.fines.length !== 1 ? 's' : ''}`;
 }
 
+// ── POPULAR BOOKS ─────────────────────────────────────────────────────────
 function renderPopularBooks() {
     const list = document.getElementById('popular-books-list');
     if (!list) return;
-    
+
     const counts = {};
     state.borrowed.forEach(b => {
-        const title = b.bookTitle || 'Unknown';
-        counts[title] = (counts[title] || 0) + 1;
+        const t = b.bookTitle || 'Unknown';
+        counts[t] = (counts[t] || 0) + 1;
     });
-    
-    const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 3);
-    
-    if (sorted.length === 0) {
-        list.innerHTML = `<li style="padding:10px 0; color:#888;">No borrowing data yet.</li>`;
+
+    const top = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+    if (top.length === 0) {
+        list.innerHTML = '<li class="popular-empty">No borrowing data yet</li>';
         return;
     }
-    
-    list.innerHTML = sorted.map(([title, count], idx) => `
-        <li style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: ${idx < sorted.length-1 ? '1px solid #eee' : 'none'};">
-            <span>${idx+1}. ${escapeHtml(title)}</span>
-            <strong style="color: var(--kivaywa-maroon, #6f1d2b);">${count} Issues</strong>
+
+    list.innerHTML = top.map(([title, count], i) => `
+        <li>
+            <span class="popular-rank">${i + 1}</span>
+            <span class="popular-title">${esc(title)}</span>
+            <span class="popular-count">${count} issues</span>
         </li>
     `).join('');
 }
 
-// 10. Event Binding
-function attachFormSubmissionHandlers() {
-    const addBookForm = document.getElementById("add-book-form");
-    const issueBookForm = document.getElementById("issue-book-form");
-    const returnBookForm = document.getElementById("return-book-form");
-    
-    if (addBookForm) addBookForm.addEventListener("submit", handleBookAdd);
-    if (issueBookForm) issueBookForm.addEventListener("submit", handleBookIssue);
-    if (returnBookForm) returnBookForm.addEventListener("submit", handleReturnBookSubmit);
-    
-    const bookSearch = document.getElementById("book-search");
-    const registrySearch = document.getElementById("registry-search");
-    
-    if (bookSearch) bookSearch.addEventListener("input", filterBooks);
-    if (registrySearch) registrySearch.addEventListener("input", filterRegistry);
-}
+// ── CHART ─────────────────────────────────────────────────────────────────
+function renderChart() {
+    const canvas  = document.getElementById('borrowingTrendsChart');
+    const emptyEl = document.getElementById('chart-empty');
+    if (!canvas) return;
 
-function attachUtilityButtonHandlers() {
-    const exportBtn = document.getElementById("export-db-btn");
-    const importBtn = document.getElementById("import-db-btn");
-    
-    if (exportBtn) exportBtn.addEventListener("click", exportSystemBackupSnapshot);
-    if (importBtn) {
-        importBtn.addEventListener("click", () => {
-            const fileInput = document.createElement("input");
-            fileInput.type = "file";
-            fileInput.accept = ".json";
-            fileInput.onchange = (e) => importSystemBackupSnapshot(e);
-            fileInput.click();
-        });
+    if (borrowingChart) { borrowingChart.destroy(); borrowingChart = null; }
+
+    const monthly = {};
+    state.borrowed.forEach(item => {
+        if (!item.issueDate) return;
+        const d = new Date(item.issueDate);
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        monthly[key] = (monthly[key] || 0) + 1;
+    });
+
+    const keys   = Object.keys(monthly).sort();
+    const labels = keys.map(k => {
+        const [y, m] = k.split('-');
+        return new Date(+y, +m - 1).toLocaleString('default', { month: 'short', year: '2-digit' });
+    });
+    const data = keys.map(k => monthly[k]);
+
+    if (data.length === 0) {
+        if (emptyEl) emptyEl.classList.remove('hidden');
+        return;
     }
+    if (emptyEl) emptyEl.classList.add('hidden');
+
+    borrowingChart = new Chart(canvas.getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Books Borrowed',
+                data,
+                backgroundColor: 'rgba(122,0,22,0.75)',
+                borderColor: 'rgba(122,0,22,1)',
+                borderWidth: 2,
+                borderRadius: 6,
+                maxBarThickness: 44,
+                hoverBackgroundColor: 'rgba(163,27,48,0.9)'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => `${ctx.raw} book${ctx.raw !== 1 ? 's' : ''} borrowed`
+                    },
+                    backgroundColor: '#1a1008',
+                    titleColor: '#fff',
+                    bodyColor: 'rgba(255,255,255,0.8)',
+                    padding: 10,
+                    cornerRadius: 8
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { stepSize: 1, font: { size: 10, family: 'Inter' }, color: '#9c8878' },
+                    grid: { color: 'rgba(0,0,0,0.04)' },
+                    border: { display: false }
+                },
+                x: {
+                    ticks: { font: { size: 10, family: 'Inter' }, color: '#9c8878', maxRotation: 40, minRotation: 30 },
+                    grid: { display: false },
+                    border: { display: false }
+                }
+            }
+        }
+    });
 }
 
-// 11. Business Logic Handlers
+// ── DATALIST ──────────────────────────────────────────────────────────────
+function populateDatalist() {
+    const dl = document.getElementById('inventory-datalist');
+    if (dl) dl.innerHTML = state.books.map(b => `<option value="${esc(b.title)}">`).join('');
+}
+
+// ── FORM HANDLERS ─────────────────────────────────────────────────────────
+function initForms() {
+    const addBook    = document.getElementById('add-book-form');
+    const issueBook  = document.getElementById('issue-book-form');
+    const returnBook = document.getElementById('return-book-form');
+
+    if (addBook)    addBook.addEventListener('submit', handleBookAdd);
+    if (issueBook)  issueBook.addEventListener('submit', handleBookIssue);
+    if (returnBook) returnBook.addEventListener('submit', handleReturnSubmit);
+
+    setDefaultIssueDates();
+}
+
+function setDefaultIssueDates() {
+    const issue  = document.getElementById('borrow-issue-date');
+    const retDt  = document.getElementById('borrow-return-date');
+    if (!issue || !retDt) return;
+    const today  = new Date();
+    const future = new Date(today);
+    future.setDate(today.getDate() + 14);
+    issue.value = today.toISOString().split('T')[0];
+    retDt.value = future.toISOString().split('T')[0];
+}
+
 async function handleBookAdd(e) {
     e.preventDefault();
-    
-    const newBook = {
-        title: document.getElementById("book-title").value.trim(),
-        author: document.getElementById("book-author").value.trim(),
-        isbn: document.getElementById("book-isbn").value.trim(),
-        category: document.getElementById("book-category").value,
-        qty: parseInt(document.getElementById("book-qty").value) || 1
+    const payload = {
+        title:    document.getElementById('book-title').value.trim(),
+        author:   document.getElementById('book-author').value.trim(),
+        isbn:     document.getElementById('book-isbn').value.trim(),
+        category: document.getElementById('book-category').value,
+        qty:      parseInt(document.getElementById('book-qty').value) || 1
     };
 
     try {
-        const response = await fetch(`${API_BASE_URL}/books`, {
+        const res = await fetch(`${API}/books`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(newBook)
+            body: JSON.stringify(payload)
         });
-
-        if (!response.ok) throw new Error("Backend infrastructure rejected initialization payload.");
-
-        closeModal("add-book-modal");
-        document.getElementById("add-book-form").reset();
-        showToast(`"${newBook.title}" committed successfully to catalog inventory!`, "success");
-        await synchronizeApplicationData();
-    } catch (error) {
-        showToast(`Add Book Failure: ${error.message}`, "error");
+        if (!res.ok) throw new Error('Server rejected the payload');
+        closeModal('add-book-modal');
+        document.getElementById('add-book-form').reset();
+        showToast(`"${payload.title}" added to catalog.`, 'success');
+        await syncData();
+    } catch (err) {
+        showToast(`Failed to add book: ${err.message}`, 'error');
     }
 }
 
 async function handleBookIssue(e) {
     e.preventDefault();
-
-    const newBorrowing = {
-        borrowerType: document.getElementById("borrow-type").value,
-        admNo: document.getElementById("borrow-adm").value.trim(),
-        name: document.getElementById("borrow-name").value.trim(),
-        form: document.getElementById("borrow-form").value,
-        bookTitle: document.getElementById("borrow-book").value.trim(),
-        issueDate: document.getElementById("borrow-issue-date").value,
-        dueDate: document.getElementById("borrow-return-date").value,
-        status: "Active"
+    const payload = {
+        borrowerType: document.getElementById('borrow-type').value,
+        admNo:        document.getElementById('borrow-adm').value.trim(),
+        name:         document.getElementById('borrow-name').value.trim(),
+        form:         document.getElementById('borrow-form').value,
+        bookTitle:    document.getElementById('borrow-book').value.trim(),
+        issueDate:    document.getElementById('borrow-issue-date').value,
+        dueDate:      document.getElementById('borrow-return-date').value,
+        status:       'Active'
     };
 
     try {
-        const response = await fetch(`${API_BASE_URL}/borrowed`, {
+        const res = await fetch(`${API}/borrowed`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(newBorrowing)
+            body: JSON.stringify(payload)
         });
-
-        if (!response.ok) throw new Error("System denied lending approval parameters.");
-
-        closeModal("issue-book-modal");
-        document.getElementById("issue-book-form").reset();
-        setInitialSystemDateContext();
-        showToast(`Volume checked out to ${newBorrowing.name} successfully!`, "info");
-        await synchronizeApplicationData();
-    } catch (error) {
-        showToast(`Issuance Aborted: ${error.message}`, "error");
+        if (!res.ok) throw new Error('Server rejected the request');
+        closeModal('issue-book-modal');
+        document.getElementById('issue-book-form').reset();
+        setDefaultIssueDates();
+        showToast(`Book issued to ${payload.name} successfully.`, 'info');
+        await syncData();
+    } catch (err) {
+        showToast(`Issue failed: ${err.message}`, 'error');
     }
 }
 
 function populateAndOpenReturnModal(admNo) {
-    const loanRecord = state.borrowed.find(item => item.admNo === admNo);
-    if (loanRecord) {
-        const searchInput = document.getElementById("return-search-id");
-        if (searchInput) searchInput.value = loanRecord.admNo;
+    const loan = state.borrowed.find(i => i.admNo === admNo);
+    const searchInput = document.getElementById('return-search-id');
+    if (searchInput) searchInput.value = admNo;
+    
+    if (loan) {
+        const preview  = document.getElementById('loan-preview');
+        const lpName   = document.getElementById('lp-name');
+        const lpBook   = document.getElementById('lp-book');
+        const lpDue    = document.getElementById('lp-due');
+        const fineInput = document.getElementById('return-fine');
         
-        const dateDue = new Date(loanRecord.dueDate);
-        const today = new Date();
-        if (today > dateDue) {
-            const diffDays = Math.ceil((today - dateDue) / (1000 * 60 * 60 * 24));
-            const fineInput = document.getElementById("return-fine");
-            if (fineInput) fineInput.value = diffDays * 20;
-        } else {
-            const fineInput = document.getElementById("return-fine");
-            if (fineInput) fineInput.value = 0;
+        if (preview) preview.style.display = 'block';
+        if (lpName)  lpName.textContent  = loan.name;
+        if (lpBook)  lpBook.textContent  = loan.bookTitle;
+        if (lpDue)   lpDue.textContent   = loan.dueDate;
+
+        if (fineInput) {
+            const today  = new Date();
+            const due    = new Date(loan.dueDate);
+            const days   = Math.max(0, Math.ceil((today - due) / 86400000));
+            fineInput.value = days > 0 ? days * 20 : 0;
         }
     }
-    openModal("return-book-modal");
+    openModal('return-book-modal');
 }
 
-async function handleReturnBookSubmit(e) {
+async function handleReturnSubmit(e) {
     e.preventDefault();
-    const identifier = document.getElementById("return-search-id").value.trim();
-    const condition = document.getElementById("return-condition").value;
-    const fineAmount = parseFloat(document.getElementById("return-fine").value) || 0;
+    const identifier  = document.getElementById('return-search-id').value.trim();
+    const condition   = document.getElementById('return-condition').value;
+    const fineAmount  = parseFloat(document.getElementById('return-fine').value) || 0;
 
-    const activeLoan = state.borrowed.find(b => b.admNo === identifier);
-    if (!activeLoan) {
-        showToast("No matching loan record discovered for input token.", "warning");
+    const loan = state.borrowed.find(b => b.admNo === identifier);
+    if (!loan) {
+        showToast('No active loan found for that ID.', 'warning');
         return;
     }
 
     try {
-        const response = await fetch(`${API_BASE_URL}/borrowed/${activeLoan.id || identifier}`, { 
-            method: 'DELETE' 
-        });
+        const res = await fetch(`${API}/borrowed/${loan.id || identifier}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Server rejected the deletion');
+        closeModal('return-book-modal');
+        document.getElementById('return-book-form').reset();
+        document.getElementById('loan-preview').style.display = 'none';
         
-        if (!response.ok) throw new Error("REST collection cluster failed validation sweep.");
-
-        closeModal("return-book-modal");
-        document.getElementById("return-book-form").reset();
-        
-        if (fineAmount > 0 || condition !== "Good") {
-            showToast(`Check-In complete. Penalty of KES ${fineAmount} logged under condition parameters.`, "warning");
+        if (fineAmount > 0 || condition !== 'Good') {
+            showToast(`Check-in complete. Penalty of KES ${fineAmount} recorded.`, 'warning');
         } else {
-            showToast("Book returned intact. Loan record resolved safely.", "success");
+            showToast('Book returned in good condition. Loan closed.', 'success');
         }
-        
-        await synchronizeApplicationData();
-    } catch (error) {
-        showToast(`Verification Aborted: ${error.message}`, "error");
+        await syncData();
+    } catch (err) {
+        showToast(`Check-in failed: ${err.message}`, 'error');
     }
 }
 
 async function handleBookDelete(isbn) {
-    if (!confirm("Are you sure you want to permanently delete this book configuration from the library database?")) return;
-
+    if (!confirm('Permanently remove this book from the library catalog?')) return;
     try {
-        const response = await fetch(`${API_BASE_URL}/books/${isbn}`, { method: 'DELETE' });
-        if (!response.ok) throw new Error("Backend denied server removal instruction context.");
-        showToast("Record dropped successfully from inventory cluster.", "success");
-        await synchronizeApplicationData();
-    } catch (error) {
-        showToast(`Deletion Failed: ${error.message}`, "error");
+        const res = await fetch(`${API}/books/${isbn}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('Server denied the removal');
+        showToast('Book removed from catalog.', 'success');
+        await syncData();
+    } catch (err) {
+        showToast(`Delete failed: ${err.message}`, 'error');
     }
 }
 
 async function handleClearFine(admNo) {
-    showToast(`Processing receipt settlement ledger entry for ${admNo}...`, "info");
     state.borrowed = state.borrowed.map(item => {
-        if (item.admNo === admNo) {
-            item.fineAmount = 0;
-            item.status = "Active";
-        }
+        if (item.admNo === admNo) { item.fineAmount = 0; item.status = 'Active'; }
         return item;
     });
-    calculateFinesSystemState();
-    renderAppLayout();
-    showToast("Fine registry updated. Balances set to zero.", "success");
+    computeFines();
+    renderFinesTable(state.fines);
+    renderMetrics();
+    updateFinesSummary();
+    showToast(`Fine cleared for ${admNo}.`, 'success');
 }
 
-// 12. Search Filters
-function filterBooks() {
-    const searchInput = document.getElementById("book-search");
-    if (!searchInput) return;
-    
-    const query = searchInput.value.toLowerCase().trim();
-    const filtered = state.books.filter(book => 
-        book.title.toLowerCase().includes(query) || 
-        book.author.toLowerCase().includes(query) || 
-        book.isbn.includes(query)
-    );
-    renderCatalogTableGrid(filtered);
-}
+// ── LOAN PREVIEW LIVE LOOKUP ──────────────────────────────────────────────
+function initReturnLoanPreview() {
+    const input = document.getElementById('return-search-id');
+    if (!input) return;
+    input.addEventListener('input', () => {
+        const val   = input.value.trim();
+        const loan  = state.borrowed.find(b => b.admNo === val);
+        const preview = document.getElementById('loan-preview');
+        if (!preview) return;
 
-function filterRegistry() {
-    const searchInput = document.getElementById("registry-search");
-    if (!searchInput) return;
-    
-    const query = searchInput.value.toLowerCase().trim();
-    const filtered = state.borrowed.filter(item => 
-        item.name.toLowerCase().includes(query) || 
-        item.admNo.includes(query) ||
-        item.bookTitle.toLowerCase().includes(query)
-    );
-    renderRegistryTableGrid(filtered);
-}
-
-// 13. Backup Utilities
-function exportSystemBackupSnapshot() {
-    try {
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state));
-        const downloadAnchor = document.createElement('a');
-        downloadAnchor.setAttribute("href", dataStr);
-        downloadAnchor.setAttribute("download", `Kivaywa_LMS_Snapshot_2026.json`);
-        document.body.appendChild(downloadAnchor);
-        downloadAnchor.click();
-        downloadAnchor.remove();
-        showToast("System diagnostic local snapshot exported.", "success");
-    } catch (e) {
-        showToast("Failed to compile state snapshot.", "error");
-    }
-}
-
-function importSystemBackupSnapshot(e) {
-    const fileReader = new FileReader();
-    fileReader.onload = async function(event) {
-        try {
-            const parsedState = JSON.parse(event.target.result);
-            if (parsedState.books && parsedState.borrowed) {
-                state = parsedState;
-                calculateFinesSystemState();
-                renderAppLayout();
-                populateBookTitleDatalist();
-                renderPopularBooks();
-                renderBorrowingChart();
-                showToast("System parameters updated from source backup file.", "success");
-            } else {
-                throw new Error("Invalid structure formatting inside parsed file configuration.");
+        if (loan) {
+            const lpName  = document.getElementById('lp-name');
+            const lpBook  = document.getElementById('lp-book');
+            const lpDue   = document.getElementById('lp-due');
+            const fineIn  = document.getElementById('return-fine');
+            if (lpName) lpName.textContent = loan.name;
+            if (lpBook) lpBook.textContent = loan.bookTitle;
+            if (lpDue)  lpDue.textContent  = loan.dueDate;
+            if (fineIn) {
+                const today = new Date();
+                const due   = new Date(loan.dueDate);
+                const days  = Math.max(0, Math.ceil((today - due) / 86400000));
+                fineIn.value = days * 20;
             }
+            preview.style.display = 'block';
+        } else {
+            preview.style.display = 'none';
+        }
+    });
+}
+
+// ── SEARCH & FILTERS ──────────────────────────────────────────────────────
+function initSearch() {
+    const bookSearch = document.getElementById('book-search');
+    const regSearch  = document.getElementById('registry-search');
+    if (bookSearch) bookSearch.addEventListener('input', () => {
+        const q = bookSearch.value.toLowerCase().trim();
+        const filtered = state.books.filter(b =>
+            b.title.toLowerCase().includes(q) ||
+            b.author.toLowerCase().includes(q) ||
+            b.isbn.includes(q)
+        );
+        renderBooksTable(filtered);
+    });
+    if (regSearch) regSearch.addEventListener('input', () => {
+        const q = regSearch.value.toLowerCase().trim();
+        const filtered = state.borrowed.filter(i =>
+            i.name.toLowerCase().includes(q) ||
+            i.admNo.includes(q) ||
+            i.bookTitle.toLowerCase().includes(q)
+        );
+        renderRegistryTable(filtered);
+    });
+}
+
+function initRegistryFilters() {
+    document.querySelectorAll('.chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+            document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+            chip.classList.add('active');
+            registryFilter = chip.dataset.filter || 'all';
+            renderRegistryTable(state.borrowed);
+        });
+    });
+}
+
+// ── BACKUP UTILITIES ──────────────────────────────────────────────────────
+function initUtilityButtons() {
+    const expBtn = document.getElementById('export-db-btn');
+    const impBtn = document.getElementById('import-db-btn');
+
+    if (expBtn) expBtn.addEventListener('click', exportBackup);
+    if (impBtn) impBtn.addEventListener('click', () => {
+        const fi = document.createElement('input');
+        fi.type = 'file'; fi.accept = '.json';
+        fi.onchange = importBackup;
+        fi.click();
+    });
+}
+
+function exportBackup() {
+    const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url;
+    a.download = `Kivaywa_LMS_Backup_${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('System backup exported successfully.', 'success');
+}
+
+function importBackup(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+        try {
+            const parsed = JSON.parse(ev.target.result);
+            if (!parsed.books || !parsed.borrowed) throw new Error('Invalid backup file structure');
+            state = parsed;
+            computeFines();
+            renderAll();
+            populateDatalist();
+            showToast('Backup restored successfully.', 'success');
         } catch (err) {
-            showToast(`Snapshot Restorations Aborted: ${err.message}`, "error");
+            showToast(`Restore failed: ${err.message}`, 'error');
         }
     };
-    fileReader.readAsText(e.target.files[0]);
+    reader.readAsText(file);
 }
 
-// 14. Modal Controls
-function openModal(id) { 
-    const modal = document.getElementById(id);
-    if (modal) modal.classList.add("open"); 
+// ── SYNC ERROR STATE ──────────────────────────────────────────────────────
+function renderSyncError() {
+    const errRow = `<tr><td colspan="7" style="text-align:center; color:var(--clr-danger); padding:28px; font-size:13px;">
+        <i class="fa-solid fa-triangle-exclamation"></i> Could not load data from server. Check connection and try refreshing.
+    </td></tr>`;
+    ['recent-transactions-tbody','books-table-tbody','registry-table-tbody','fines-table-tbody'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = errRow;
+    });
 }
 
-function closeModal(id) { 
-    const modal = document.getElementById(id);
-    if (modal) modal.classList.remove("open"); 
+// ── MODALS ────────────────────────────────────────────────────────────────
+function openModal(id) {
+    const m = document.getElementById(id);
+    if (m) { m.classList.add('open'); document.body.style.overflow = 'hidden'; }
 }
 
-function setInitialSystemDateContext() {
-    const issueDateInput = document.getElementById("borrow-issue-date");
-    const returnDateInput = document.getElementById("borrow-return-date");
-    
-    if (issueDateInput && returnDateInput) {
-        const today = new Date();
-        issueDateInput.value = today.toISOString().split('T')[0];
-        
-        const futureReturnDate = new Date(today);
-        futureReturnDate.setDate(today.getDate() + 14);
-        returnDateInput.value = futureReturnDate.toISOString().split('T')[0];
+function closeModal(id) {
+    const m = document.getElementById(id);
+    if (m) { m.classList.remove('open'); document.body.style.overflow = ''; }
+}
+
+// Close on backdrop click
+document.addEventListener('click', e => {
+    if (e.target.classList.contains('modal-backdrop')) {
+        e.target.classList.remove('open');
+        document.body.style.overflow = '';
     }
+});
+
+// ── TOASTS ────────────────────────────────────────────────────────────────
+function showToast(message, type = 'success', duration = 4500) {
+    const stack = document.getElementById('toast-stack');
+    if (!stack) return;
+
+    const icons = { success: 'fa-circle-check', error: 'fa-circle-xmark', warning: 'fa-triangle-exclamation', info: 'fa-circle-info' };
+
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.innerHTML = `
+        <i class="fa-solid ${icons[type] || icons.info} toast-icon"></i>
+        <span class="toast-msg">${esc(message)}</span>
+        <button class="toast-close-btn" onclick="this.parentElement.remove()">&times;</button>
+    `;
+    stack.appendChild(toast);
+
+    setTimeout(() => {
+        toast.style.animation = 'toastOut 0.35s ease forwards';
+        toast.addEventListener('animationend', () => toast.remove(), { once: true });
+    }, duration);
 }
 
-function displayTableLoadingIndicators() {
-    const targets = ["recent-transactions-tbody", "books-table-tbody", "registry-table-tbody", "fines-table-tbody"];
-    targets.forEach(id => {
-        const element = document.getElementById(id);
-        if (element) {
-            element.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:24px; color:#666;"><i class="fa-solid fa-spinner fa-spin"></i> Synchronizing cloud dataset registers...</td></tr>`;
-        }
-    });
+// ── HELPERS ───────────────────────────────────────────────────────────────
+function setText(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val;
 }
 
-function renderDataSyncFailureState(message) {
-    const targets = ["recent-transactions-tbody", "books-table-tbody", "registry-table-tbody"];
-    targets.forEach(id => {
-        const element = document.getElementById(id);
-        if (element) {
-            element.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#ef4444; padding:20px; font-weight:500;"><i class="fa-solid fa-triangle-exclamation"></i> Network Error: Fallback to local machine memory array.</td></tr>`;
-        }
-    });
+function emptyRow(cols, msg) {
+    return `<tr><td colspan="${cols}" class="table-loading" style="color:var(--clr-text-3);">${msg}</td></tr>`;
 }
 
-function escapeHtml(string) {
-    if (!string) return '';
-    return String(string).replace(/[&<>"']/g, s => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[s]));
+function esc(str) {
+    if (str === null || str === undefined) return '';
+    return String(str).replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
 }
 
-// 15. Global Scope Registration
-window.switchTab = switchTab;
-window.openModal = openModal;
-window.closeModal = closeModal;
-window.handleBookDelete = handleBookDelete;
-window.populateAndOpenReturnModal = populateAndOpenReturnModal;
-window.handleClearFine = handleClearFine;
+// ── GLOBAL REGISTRATION ────────────────────────────────────────────────────
+window.switchTab                   = switchTab;
+window.openModal                   = openModal;
+window.closeModal                  = closeModal;
+window.handleBookDelete            = handleBookDelete;
+window.populateAndOpenReturnModal  = populateAndOpenReturnModal;
+window.handleClearFine             = handleClearFine;
